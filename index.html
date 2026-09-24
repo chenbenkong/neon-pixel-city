@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>霓虹之城 NEON//CITY · 像素赛博朋克</title>
+  <meta name="description" content="一座可自由探索的像素赛博朋克城市：2D 像素街道与 3D 霓虹天际线双维度切换，程序化生成、实时合成的背景音乐。" />
+  <meta name="theme-color" content="#07030f" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' fill='%2307030f'/%3E%3Crect x='2' y='6' width='3' height='8' fill='%23ff2bd6'/%3E%3Crect x='6' y='2' width='4' height='12' fill='%2329f0ff'/%3E%3Crect x='11' y='8' width='3' height='6' fill='%23ffd166'/%3E%3C/svg%3E" />
+  <link rel="preload" href="fonts/FusionPixel-subset.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="fonts/PressStart2P.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+</head>
+<body data-mode="2d">
+  <div id="stage">
+    <canvas id="c2d" class="view active"></canvas>
+    <canvas id="c3d" class="view"></canvas>
+  </div>
+  <canvas id="fx"></canvas>
+  <div id="crt"></div>
+
+  <div id="hud">
+    <div class="hud-tl panel">
+      <div class="logo"><span class="glitch" data-text="NEON//CITY">NEON//CITY</span></div>
+      <div class="logo-sub">霓虹之城 · SECTOR 2077</div>
+      <div class="district">
+        <div class="label">当前区域 / DISTRICT</div>
+        <div class="dname" id="dname">歌舞伎町</div>
+        <div class="den" id="den">KABUKI-CHO</div>
+      </div>
+      <div class="tele" id="tele"><span>POS 00000 M</span><span>SPD 000 KM/H</span><span>RAIN 87%</span></div>
+    </div>
+
+    <div class="hud-tc">
+      <span id="clock">2077.09.24 · 23:47:00</span><span class="sep">//</span><span id="weather">酸雨 · 87%</span>
+    </div>
+
+    <div class="hud-tr">
+      <button id="modeSwitch" class="mode" data-mode="2d" aria-label="切换 2D / 3D 风格">
+        <span class="mode-track">
+          <span class="mode-thumb"></span>
+          <span class="mode-opt o2"><b>2D</b><i>像素街道</i></span>
+          <span class="mode-opt o3"><b>3D</b><i>霓虹天际</i></span>
+        </span>
+        <span class="mode-hint">[ TAB ] 维度跃迁</span>
+      </button>
+      <div class="icons">
+        <button id="btnMusic" class="ibtn" title="音乐开关 (M)"><canvas id="eq" width="40" height="22"></canvas></button>
+        <button id="btnFull" class="ibtn" title="全屏 (F)"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M1 1h5v2H3v3H1zM10 1h5v5h-2V3h-3zM1 10h2v3h3v2H1zM13 10h2v5h-5v-2h3z" fill="currentColor"/></svg></button>
+      </div>
+    </div>
+
+    <div class="hud-bl panel" id="controls"></div>
+
+    <div class="hud-br panel">
+      <div class="np-label">NOW PLAYING · 实时合成</div>
+      <div class="np-title" id="track">霓虹夜雨 · Neon Rain</div>
+      <canvas id="spectrum" width="220" height="34"></canvas>
+    </div>
+
+    <div id="banner"><div class="b1" id="b1"></div><div class="b2" id="b2"></div></div>
+    <div id="toast"></div>
+  </div>
+
+  <div id="touch">
+    <div id="joy"><div id="joyKnob"></div></div>
+    <div class="tbtns">
+      <button data-btn="boost">»</button>
+      <button data-btn="down">▼</button>
+      <button data-btn="up">▲</button>
+    </div>
+  </div>
+
+  <div id="boot">
+    <div class="boot-inner">
+      <pre id="bootLog"></pre>
+      <div class="title-wrap">
+        <h1 class="title glitch" data-text="霓虹之城">霓虹之城</h1>
+        <div class="title-en">NEON//CITY</div>
+        <p class="tagline">一座永不入眠的像素赛博都市 · 2D 街道 / 3D 天际线 · 自由探索</p>
+      </div>
+      <div class="bar"><i id="bootBar"></i><span id="bootPct">0%</span></div>
+      <button id="enter" disabled><span>[ 接入城市 · JACK IN ]</span></button>
+      <p class="boot-tip">建议佩戴耳机并开启声音 · 背景音乐由浏览器实时合成</p>
+    </div>
+  </div>
+
+  <noscript><div style="position:fixed;inset:0;display:grid;place-items:center;color:#fff;background:#000">需要启用 JavaScript</div></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
