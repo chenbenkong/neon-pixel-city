@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>加载拦截定位（对照测试）</title>
+<style>
+  body { margin:0; padding:24px; background:#0b0616; color:#e8e4ff;
+         font-family: ui-monospace, Consolas, "Courier New", monospace; font-size:14px; line-height:1.75; }
+  h1 { font-size:18px; color:#29f0ff; margin:0 0 4px; }
+  .sub { color:#9a92c7; font-size:12px; margin-bottom:16px; }
+  .box { background:rgba(255,255,255,.04); border-left:3px solid #ff2bd6; padding:12px 16px; margin:10px 0; }
+  .ok { color:#4dffa8; } .bad { color:#ff5c7a; } .warn { color:#ffd166; } .dim { color:#9a92c7; }
+  .verdict { margin-top:16px; padding:14px 16px; border-left:3px solid #4dffa8; background:rgba(77,255,168,.08); display:none; }
+  .verdict.show { display:block; }
+</style>
+</head>
+<body>
+<h1>NEON//CITY 加载拦截定位</h1>
+<div class="sub">这个页面用四种方式加载同一个文件，看清是哪一类请求被拦了。结果截图发我即可。</div>
+<div id="out" class="box">正在测试…</div>
+<div id="verdict" class="verdict"></div>
+
+<script>
+var out = document.getElementById('out');
+var results = {};
+function line(html) { out.insertAdjacentHTML('beforeend', html + '<br>'); }
+function tag(ok) { return ok ? '<span class="ok">✔ 成功</span>' : '<span class="bad">✘ 被拦</span>'; }
+
+line('<span class="dim">浏览器</span>　' + navigator.userAgent);
+line('<span class="dim">地址</span>　　' + location.href);
+line('<span class="dim">无痕模式</span>　' + (/\)?\s*$/.test(navigator.userAgent) && navigator.webdriver === undefined ?
+     '<span class="dim">无法直接检测</span>' : '<span class="dim">无法直接检测</span>'));
+line('<br><span class="dim">—— 四种加载方式对照（目标都是 ./js/util.js，仅 2KB）——</span>');
+
+function done() {
+  if (results.fetch === undefined || results.classic === undefined ||
+      results.module === undefined || results.dynamic === undefined) return;
+
+  var v = document.getElementById('verdict');
+  var s = '';
+  if (!results.fetch) {
+    s = '<b class="bad">连 fetch 都失败了</b>，说明是全站/网络级拦截，而非脚本级拦截。';
+  } else if (results.classic && !results.module && !results.dynamic) {
+    s = '<b class="bad">确证：普通脚本能加载，模块脚本被专门拦截。</b><br>' +
+        '拦截者只会针对 <span class="warn">type="module"</span> 的请求下手 —— 典型元凶是' +
+        '<b>广告/脚本拦截类浏览器扩展</b>、<b>安全软件的网页防护</b>（360、火绒、电脑管家）、' +
+        '或<b>浏览器 VPN / 代理插件</b>。<br>' +
+        '→ <b>立刻验证：用无痕窗口打开本页（Ctrl+Shift+N），若全部变成成功，就是扩展干的。</b>';
+  } else if (results.classic && results.module && !results.dynamic) {
+    s = '<b class="bad">静态模块脚本正常，只有动态 import 被拦。</b><br>' +
+        '常见于拦截规则只匹配 import() 的场景，同样优先怀疑扩展与安全软件的网页防护。';
+  } else if (results.classic && results.module && results.dynamic) {
+    s = '<b class="warn">四种方式全部成功</b>，说明当前这一刻没有拦截。<br>' +
+        '那问题很可能是<b>间歇性</b>的（代理抖动、限流）或与<b>并发/时序</b>有关 —— ' +
+        '请回到主页面刷新几次，并在 F12 → Network 里观察 js/main.js 是否偶发 pending 或 net::ERR_*。';
+  } else {
+    s = '<b class="bad">全部失败</b>，属于网络层整体不可达。';
+  }
+  v.innerHTML = s;
+  v.classList.add('show');
+}
+
+// 1) fetch —— 对照基线，它会成功，说明文件与网络本身没问题
+fetch('./js/util.js?t=' + Date.now(), { cache: 'no-store' })
+  .then(function (r) { results.fetch = r.ok; line(tag(r.ok) + '　① fetch() 　　HTTP ' + r.status + '　<span class="dim">（基线：证明文件和网络本身可达）</span>'); })
+  .catch(function (e) { results.fetch = false; line(tag(false) + '　① fetch() 　　错误 ' + e.message); })
+  .then(done);
+
+// 2) 普通脚本 —— 不受模块 MIME 严格校验，通常能过
+var c1 = document.createElement('script');
+c1.src = './js/util.js?t=' + Date.now();
+c1.onload = function () { results.classic = true; line(tag(true) + '　② 普通 &lt;script src&gt;　　<span class="dim">（说明“脚本类请求”本身没被全局封死）</span>'); done(); };
+c1.onerror = function () { results.classic = false; line(tag(false) + '　② 普通 &lt;script src&gt;'); done(); };
+document.body.appendChild(c1);
+
+// 3) 静态模块脚本 —— 这个才是霓虹之城真正用的方式
+var c2 = document.createElement('script');
+c2.type = 'module';
+c2.src = './js/util.js?t=' + Date.now();
+c2.onload = function () { results.module = true; line(tag(true) + '　③ &lt;script type="module"&gt;　<span class="dim">（原站加载 main.js 用的就是这种方式）</span>'); done(); };
+c2.onerror = function () { results.module = false; line(tag(false) + '　③ &lt;script type="module"&gt;　<span class="bad">&lt;&lt;&lt; 就是这里</span>'); done(); };
+document.body.appendChild(c2);
+
+// 4) 动态 import —— 诊断页第一版失败的那个
+import('./js/util.js?t=' + Date.now())
+  .then(function () { results.dynamic = true; line(tag(true) + '　④ import() 动态导入'); done(); })
+  .catch(function (e) { results.dynamic = false; line(tag(false) + '　④ import() 动态导入　　错误 ' + e.message); done(); });
+</script>
+</body>
+</html>
