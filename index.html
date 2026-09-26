@@ -89,6 +89,68 @@
   </div>
 
   <noscript><div style="position:fixed;inset:0;display:grid;place-items:center;color:#fff;background:#000">需要启用 JavaScript</div></noscript>
+
+  <!-- 加载自检（classic script，非 module）：module 完全加载失败时依然会执行 -->
+  <script>
+  (function () {
+    var pctEl = document.getElementById('bootPct');
+    var barEl = document.getElementById('bootBar');
+    var logEl = document.getElementById('bootLog');
+    var p = 0;
+
+    // a) 心跳进度：0 → 7% 后停住（7% 以下，不与真实进度 8% 冲突）
+    var timer = setInterval(function () {
+      if (p >= 7) return;
+      p = Math.min(7, p + 0.35);
+      if (barEl) barEl.style.width = p + '%';
+      if (pctEl) pctEl.textContent = Math.round(p) + '%';
+    }, 100);
+
+    // c) 供 main.js 接管时调用，停止心跳
+    window.__stopHeartbeat = function () {
+      clearInterval(timer);
+    };
+
+    // b) 8 秒超时兜底：module 压根没执行则输出中文诊断
+    setTimeout(function () {
+      if (window.__bootStarted) return;
+      clearInterval(timer);
+
+      if (logEl) {
+        logEl.textContent =
+          'NEON//OS v20.77 · KERNEL BOOT ............ FAILED\n' +
+          '\n' +
+          '已等待 8 秒仍未加载，页面没有崩溃，是资源没到。\n' +
+          '脚本 js/main.js 至今没有执行成功。\n' +
+          '\n' +
+          '请按下面三条依次排查：\n' +
+          '\n' +
+          '1) 资源加载被本机拦截（最常见）\n' +
+          '   代理 / 杀毒软件的网页防护 / 广告拦截或脚本拦截扩展，\n' +
+          '   可能专门拦掉了 type="module" 的脚本请求。\n' +
+          '   动作：按 F12 打开开发者工具 → Network 面板 → 刷新页面，\n' +
+          '        看 js/main.js 是不是一直 pending（灰色、无状态码），\n' +
+          '        或者报 net::ERR_* 一类错误。\n' +
+          '        临时关掉广告拦截扩展、杀软网页防护、代理再试一次。\n' +
+          '\n' +
+          '2) 浏览器内核过旧\n' +
+          '   不支持 ES module（<script type="module">）或较新语法的浏览器\n' +
+          '   会让脚本完全不执行，症状与本页一致。\n' +
+          '   动作：换 Chrome / Edge 最新版再打开。\n' +
+          '\n' +
+          '3) 用 file:// 直接打开了本地文件\n' +
+          '   浏览器会以 CORS 策略拒绝加载 ES module，必定卡在这一步。\n' +
+          '   动作：在本目录执行 python -m http.server 8123，\n' +
+          '        再访问 http://127.0.0.1:8123/ 。\n' +
+          '\n' +
+          '> 若需帮助，请把 F12 Console 与 Network 的截图一并反馈。_';
+      }
+      if (barEl) barEl.style.width = '7%';
+      if (pctEl) pctEl.textContent = '0%';
+    }, 8000);
+  })();
+  </script>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

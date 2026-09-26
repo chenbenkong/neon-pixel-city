@@ -59,6 +59,8 @@ function progress(p) {
 }
 
 async function boot() {
+  window.__bootStarted = true;
+  if (window.__stopHeartbeat) window.__stopHeartbeat();
   const fonts = Promise.race([
     Promise.all(['12px FusionPixel', '16px PressStart2P', '18px VT323'].map((f) => document.fonts.load(f))),
     new Promise((r) => setTimeout(r, 3500)),
@@ -155,8 +157,14 @@ function toggleMusic() {
 }
 $('#btnMusic').addEventListener('click', toggleMusic);
 function toggleFull() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
-  else document.exitFullscreen?.();
+  // 不使用可选链语法，避免旧内核浏览器在解析阶段抛 SyntaxError
+  var fsRequest = document.documentElement.requestFullscreen;
+  var fsExit = document.exitFullscreen;
+  if (!document.fullscreenElement) {
+    if (fsRequest) fsRequest.call(document.documentElement).catch(function () {});
+  } else if (fsExit) {
+    fsExit.call(document);
+  }
 }
 $('#btnFull').addEventListener('click', toggleFull);
 
@@ -285,7 +293,8 @@ function frame(now) {
 let rsz = 0;
 addEventListener('resize', () => {
   clearTimeout(rsz);
-  rsz = setTimeout(() => { city2d?.resize(); city3d?.resize(); fx.resize(); }, 120);
+  // 不使用可选链语法，避免旧内核浏览器在解析阶段抛 SyntaxError
+  rsz = setTimeout(function () { if (city2d) city2d.resize(); if (city3d) city3d.resize(); fx.resize(); }, 120);
 });
 
 updateControls();
