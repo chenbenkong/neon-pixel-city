@@ -58,6 +58,38 @@ function progress(p) {
   $('#bootPct').textContent = Math.round(p) + '%';
 }
 
+// 3D 包双通道加载器：优先普通脚本（可绕开对 ES module 的拦截），失败则回退模块方式。
+// 注意：import() 的 specifier 必须是变量（spec），否则 esbuild --bundle 会把模块打进主程序。
+function loadCity3D() {
+  return new Promise(function (resolve, reject) {
+    var g = window.NEONCity3D;
+    if (g && g.City3D) { resolve(g.City3D); return; }
+    var triedModule = false;
+
+    // 通道二：退回原始 ES module 路径（依赖页面里的 importmap 解析 three）
+    function viaModule() {
+      if (triedModule) { reject(new Error('3D 包两种加载方式均失败')); return; }
+      triedModule = true;
+      var spec = './js/city3d.js';
+      import(spec).then(function (m) {
+        if (m && m.City3D) resolve(m.City3D);
+        else reject(new Error('模块方式加载 city3d 但未导出 City3D'));
+      }).catch(reject);
+    }
+
+    // 通道一：普通 classic script，加载打包好的 dist/city3d.js（IIFE，挂 window.NEONCity3D）
+    var s = document.createElement('script');
+    s.src = 'dist/city3d.js';
+    s.onload = function () {
+      var g2 = window.NEONCity3D;
+      if (g2 && g2.City3D) resolve(g2.City3D);
+      else viaModule();
+    };
+    s.onerror = viaModule;
+    document.head.appendChild(s);
+  });
+}
+
 async function boot() {
   window.__bootStarted = true;
   if (window.__stopHeartbeat) window.__stopHeartbeat();
@@ -70,9 +102,9 @@ async function boot() {
   city2d = new City2D($('#c2d'), audio);
   requestAnimationFrame(frame);
   progress(24);
-  city3dReady = import('./city3d.js')
-    .then((m) => {
-      city3d = new m.City3D($('#c3d'), audio);
+  city3dReady = loadCity3D()
+    .then((City3D) => {
+      city3d = new City3D($('#c3d'), audio);
       city3d.update(0.016, IDLE);
       city3d.render();
       return city3d;
