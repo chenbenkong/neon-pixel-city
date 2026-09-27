@@ -41,3 +41,60 @@ export const ADS = [
 ];
 
 export const TRACKS = ['霓虹夜雨 · Neon Rain', '数据之海 · Data Ocean', '午夜飞行 · Midnight Flight', '电子梦境 · Electric Dreams'];
+
+// ---------------- 玩法扩展数据 ----------------
+
+// NPC 对话文案（赛博朋克风味，随机弹出）
+export const NPC_LINES = [
+  '雨里的霓虹比白天诚实。',
+  '我的义眼又在漏电……第三只了。',
+  '别信任何免费升级，尤其是记忆。',
+  '今晚的酸雨腐蚀性不错，适合洗掉过去。',
+  '公司塔顶那盏灯，是给死人照的。',
+  '我在这条街站了三十年，招牌换了六轮。',
+  '碎片？那是旧网络的残渣，捡了会上瘾。',
+  '你身上有股数据坟场的味道。',
+  '拉面还是那家拉面，汤底换了三次老板。',
+  '他们卖梦，按小时计费，醒来另收费。',
+  '楼上那小子把自己上传了，房租还挂在名下。',
+  '小心自动贩卖机，它认得通缉犯的脸。',
+  '我的义体是二手的，前任死在巷子里。',
+  '霓虹不会灭，只会换更便宜的颜色。',
+  '警用的无人机刚飞过去，别抬头。',
+  '这条街的猫都比人有编制。',
+  '竞速的人晚上都往天上去，像萤火虫。',
+  '我存了二十年钱，只为买回自己的名字。',
+  '天际线每天都在长高，压得人喘不过气。',
+  '听说港湾那边有 ship 在卖假芯片。',
+  '广告牌上的女孩对我笑了一整夜。',
+  '赛后别看成绩单，看看天就行。',
+  '旧城的服务器还在跑，跑的是谁没人知道。',
+  '收起你的好奇，好奇在这是奢侈品。',
+  '再过一小时，这里的灯会比星星亮。',
+];
+
+// 任务模板（循环派发；visit 的 {zone} 在派发时随机填充）
+export const QUEST_TEMPLATES = [
+  { type: 'collect', n: 5, title: '碎片回收 I', desc: '回收 5 枚霓虹碎片', reward: 50 },
+  { type: 'visit', title: '区域巡查', desc: '前往 {zone} 打卡', reward: 80 },
+  { type: 'collect', n: 10, title: '碎片回收 II', desc: '回收 10 枚霓虹碎片', reward: 100 },
+  { type: 'race', n: 4, time: 75, title: '天空竞速 I', desc: '限时穿越 4 个天空检查点', reward: 150 },
+  { type: 'collect', n: 15, title: '碎片回收 III', desc: '回收 15 枚霓虹碎片', reward: 160 },
+  { type: 'visit', title: '跨区快递', desc: '把货物送到 {zone}', reward: 100 },
+  { type: 'race', n: 6, time: 90, title: '天空竞速 II', desc: '限时穿越 6 个天空检查点', reward: 240 },
+];
+
+// 成就定义表（触发判定分布在收集/任务/切模式等事件点）
+export const ACHIEVEMENTS = [
+  { id: 'first_shard', name: '初拾微光', desc: '收集第一枚霓虹碎片' },
+  { id: 'shard_10', name: '拾荒者', desc: '累计收集 10 枚碎片' },
+  { id: 'shard_50', name: '碎片猎手', desc: '累计收集 50 枚碎片' },
+  { id: 'shard_100', name: '霓虹收藏家', desc: '累计收集 100 枚碎片' },
+  { id: 'first_quest', name: '街头新人', desc: '完成第一个任务' },
+  { id: 'quest_5', name: '夜之城跑腿', desc: '完成 5 个任务' },
+  { id: 'quest_15', name: '传奇中间人', desc: '完成 15 个任务' },
+  { id: 'all_districts', name: '六区通缉', desc: '跑遍全部 6 大区域' },
+  { id: 'first_flight', name: '展翅高飞', desc: '首次进入 3D 天际线' },
+  { id: 'race_record', name: '竞速之王', desc: '刷新天空竞速最佳纪录' },
+  { id: 'rich', name: '赛博富豪', desc: '积分达到 1000' },
+];

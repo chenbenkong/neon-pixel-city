@@ -272,6 +272,14 @@ export class City3D {
     this.buildLandmarks();
     this.buildCar();
     this.buildDust();
+    // ---------- 玩法扩展：碎片 / 竞速检查点 / 性能护栏 ----------
+    // 对外只暴露窄接口：onShardCollect / onRaceCheckpoint / setRace / clearRace / setEntityScale
+    // three 对象一律不出 this。
+    this.onShardCollect = null;
+    this.onRaceCheckpoint = null;
+    this.entityScale = 1;
+    this.buildShards();
+    this.buildCheckpoints();
     this.scene.add(new THREE.HemisphereLight(0x8a5cff, 0xff2bd6, 1.3));
     const moon = new THREE.DirectionalLight(0xbfd0ff, 1.2);
     moon.position.set(-0.55, 0.6, -0.78);
@@ -754,6 +762,189 @@ export class City3D {
     this.scene.add(this.dust);
   }
 
+  // ---------------- 玩法扩展：碎片 / 竞速 ----------------
+
+  /** 性能护栏：碎片激活数随规模伸缩（只降不升由 main.js 控制） */
+  setEntityScale(k) {
+    this.entityScale = k;
+  }
+
+  buildShards() {
+    const SHARD_MAX = 14;
+    const geo = new THREE.OctahedronGeometry(1.6, 0);
+    const matA = new THREE.MeshBasicMaterial({ color: new THREE.Color('#29f0ff').multiplyScalar(3), transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, fog: true });
+    const matB = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff2bd6').multiplyScalar(3), transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, fog: true });
+    this.shardPool = [];
+    for (let i = 0; i < SHARD_MAX; i++) {
+      const m = new THREE.Mesh(geo, i % 2 ? matA : matB);
+      m.visible = false;
+      this.scene.add(m);
+      this.shardPool.push({ m, active: false, x: 0, z: 0, y: 0, seed: Math.random() * 6.28, respawn: 1 + i * 0.4 });
+    }
+    // 收集爆闪：复用 2 个扩散环
+    this.bursts = [];
+    const bgeo = new THREE.TorusGeometry(1, 0.22, 6, 24);
+    for (let i = 0; i < 2; i++) {
+      const bm = new THREE.Mesh(bgeo, new THREE.MeshBasicMaterial({ color: new THREE.Color('#7af6ff').multiplyScalar(4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+      bm.visible = false;
+      this.scene.add(bm);
+      this.bursts.push({ m: bm, t: 1 });
+    }
+  }
+
+  spawn3dShard(s) {
+    // 随机落位在整片城市（TILE 平铺、随玩家 wrap），高度避开楼体
+    s.x = Math.random() * TILE;
+    s.z = Math.random() * TILE;
+    const hit = this.heightAt(s.x, s.z, 0);
+    s.y = Math.max(26 + Math.random() * 70, hit ? hit.h + 12 : 26);
+    s.active = true;
+    s.m.visible = true;
+  }
+
+  update3dShards(dt) {
+    const st = this.st.pos;
+    const t = this.time;
+    const want = Math.max(5, Math.round(14 * this.entityScale));
+    let active = 0;
+    for (const s of this.shardPool) if (s.active) active += 1;
+    for (const s of this.shardPool) {
+      if (!s.active) {
+        s.respawn -= dt;
+        if (s.respawn <= 0 && active < want) { this.spawn3dShard(s); active += 1; }
+        continue;
+      }
+      // 与地标同款 TILE wrap：始终取离玩家最近的副本
+      const wx = s.x + Math.round((st.x - s.x) / TILE) * TILE;
+      const wz = s.z + Math.round((st.z - s.z) / TILE) * TILE;
+      const wy = s.y + Math.sin(t * 1.6 + s.seed) * 2.5;
+      s.m.position.set(wx, wy, wz);
+      s.m.rotation.y += dt * 2.2;
+      const dx = wx - st.x, dy = wy - st.y, dz = wz - st.z;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 < 49) { // 7 米内自动收集（距离平方判定，不开方）
+        s.active = false;
+        s.m.visible = false;
+        s.respawn = 4 + Math.random() * 4;
+        active -= 1;
+        this.spawnBurst(wx, wy, wz);
+        if (this.onShardCollect) this.onShardCollect(wx, wy);
+      }
+    }
+    this.updateBursts(dt);
+  }
+
+  spawnBurst(x, y, z) {
+    for (const b of this.bursts) {
+      if (b.t < 1) continue;
+      b.t = 0;
+      b.m.position.set(x, y, z);
+      b.m.visible = true;
+      return;
+    }
+  }
+
+  updateBursts(dt) {
+    for (const b of this.bursts) {
+      if (b.t >= 1) continue;
+      b.t = Math.min(1, b.t + dt / 0.45);
+      b.m.scale.setScalar(1 + b.t * 7);
+      b.m.material.opacity = (1 - b.t) * 0.9;
+      if (b.t >= 1) b.m.visible = false;
+    }
+  }
+
+  buildCheckpoints() {
+    // 竞速光环池（上限 8）：风格与地标光环一致（加色发光圆环）
+    this.raceRings = [];
+    this.racePoints = [];
+    this.raceIdx = 0;
+    this.raceTotal = 0;
+    const geo = new THREE.TorusGeometry(6.5, 0.45, 8, 40);
+    for (let i = 0; i < 8; i++) {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: new THREE.Color('#29f0ff').multiplyScalar(3.5), transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: true }));
+      m.visible = false;
+      this.scene.add(m);
+      this.raceRings.push(m);
+    }
+    // 当前目标的垂直信标（远距离可见，沿用霓虹光柱风格）
+    this.raceBeacon = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 90, 0.5),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color('#29f0ff').multiplyScalar(2.5), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, fog: true })
+    );
+    this.raceBeacon.visible = false;
+    this.scene.add(this.raceBeacon);
+    this.colNext = new THREE.Color('#ff2bd6').multiplyScalar(1.4);
+    this.colCur = new THREE.Color('#29f0ff').multiplyScalar(3.5);
+  }
+
+  /** 布置 n 个检查点：从当前位置沿随机航线链式延伸，高度避开楼体 */
+  setRace(n) {
+    this.clearRace();
+    this.raceTotal = Math.min(n, this.raceRings.length);
+    const st = this.st;
+    let x = st.pos.x, z = st.pos.z;
+    let ang = st.yaw;
+    for (let i = 0; i < this.raceTotal; i++) {
+      ang += (Math.random() - 0.5) * 1.6;
+      const dist = 90 + Math.random() * 70;
+      x += Math.sin(ang) * dist;
+      z += Math.cos(ang) * dist;
+      const hit = this.heightAt(x, z, 0);
+      const y = Math.max(32 + Math.random() * 60, hit ? hit.h + 14 : 32);
+      this.racePoints.push({ x, y, z });
+      const m = this.raceRings[i];
+      m.position.set(x, y, z);
+      m.rotation.set(0, ang, 0); // 环面法线朝向航线方向
+      m.visible = true;
+    }
+    this.raceIdx = 0;
+    this.refreshRaceVisual();
+  }
+
+  clearRace() {
+    this.raceTotal = 0;
+    this.racePoints.length = 0;
+    this.raceIdx = 0;
+    for (const m of this.raceRings) m.visible = false;
+    this.raceBeacon.visible = false;
+  }
+
+  refreshRaceVisual() {
+    for (let i = 0; i < this.racePoints.length; i++) {
+      const m = this.raceRings[i];
+      const cur = i === this.raceIdx;
+      m.material.color.copy(cur ? this.colCur : this.colNext);
+      m.material.opacity = cur ? 0.95 : 0.25;
+    }
+    if (this.raceIdx < this.racePoints.length) {
+      const p = this.racePoints[this.raceIdx];
+      this.raceBeacon.position.set(p.x, p.y + 45, p.z);
+      this.raceBeacon.visible = true;
+    } else {
+      this.raceBeacon.visible = false;
+    }
+  }
+
+  updateRace(dt) {
+    if (this.raceTotal <= 0 || this.raceIdx >= this.raceTotal) return;
+    const tgt = this.racePoints[this.raceIdx];
+    const m = this.raceRings[this.raceIdx];
+    const t = this.time;
+    // 当前目标环：呼吸缩放 + 轻微摆动，与地标光环动效一致
+    m.scale.setScalar(1 + Math.sin(t * 4) * 0.06);
+    m.rotation.x = Math.sin(t * 1.7) * 0.35;
+    const s = this.st.pos;
+    const dx = s.x - tgt.x, dy = s.y - tgt.y, dz = s.z - tgt.z;
+    // 距离平方判定穿越（半径 8）
+    if (dx * dx + dy * dy + dz * dz < 64) {
+      this.raceIdx += 1;
+      this.spawnBurst(tgt.x, tgt.y, tgt.z);
+      this.refreshRaceVisual();
+      if (this.onRaceCheckpoint) this.onRaceCheckpoint(this.raceIdx, this.raceTotal);
+    }
+  }
+
   // ---------------- lifecycle ----------------
   resize() {
     const w = window.innerWidth, h = window.innerHeight;
@@ -920,8 +1111,11 @@ export class City3D {
       b.m.rotation.set(Math.sin(t * 0.3 + b.seed) * 0.5, 0, Math.cos(t * 0.23 + b.seed * 1.3) * 0.5);
     }
     this.updateKoi(t);
-    // lightning
-    this.nextFlash = (this.nextFlash ?? 10) - dt;
+    this.update3dShards(dt);
+    this.updateRace(dt);
+    // lightning（空值合并改为显式判断，保持回退模块通道的老内核兼容性）
+    if (this.nextFlash === undefined || this.nextFlash === null) this.nextFlash = 10;
+    this.nextFlash -= dt;
     if (this.nextFlash <= 0) { this.nextFlash = 16 + Math.random() * 20; this.flash = 1; this.audio.thunder(0.6 + Math.random()); }
     this.flash = Math.max(0, this.flash - dt * 2.5);
     this.sky.material.uniforms.uFlash.value = this.flash * (Math.random() < 0.7 ? 1 : 0.3);

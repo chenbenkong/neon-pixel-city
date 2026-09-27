@@ -1,5 +1,5 @@
 import { hash, rng, clamp, lerp, pick, mixHex, rgba, shade, makeCanvas, smooth, easeOutCubic } from './util.js';
-import { districtAt, SHOPS, VERTICAL_WORDS, BIG_WORDS, ADS, PIXEL_FONT } from './data.js';
+import { districtAt, SHOPS, VERTICAL_WORDS, BIG_WORDS, ADS, PIXEL_FONT, NPC_LINES } from './data.js';
 import { drawTiny, tinyWidth, neonSign, pixelText, pline, pcircle } from './pixel.js';
 
 const DISTRICT_LEN = 2600;
@@ -59,6 +59,14 @@ export class City2D {
     this.tag = { a: 0, shop: null };
     this.clouds = this.makeClouds();
     this.vendCache = new Map();
+    // ---------- 玩法扩展：碎片 / NPC 对话 / 性能护栏 ----------
+    this.onShardCollect = null; // 碎片收集回调（main.js 接线）
+    this.entityScale = 1;       // 实体规模 1 → 0.8 → 0.4，只降不升
+    this.talkKey = 'E';         // 对话按键提示（触屏设备由 main.js 置 null）
+    this.talkCd = 0;            // 对话冷却
+    this.shardSprite = this.makeShardSprite();
+    this.shards = [];           // 碎片对象池（固定容量，激活数随规模伸缩）
+    for (let i = 0; i < 12; i++) this.shards.push({ active: false, x: 0, y0: 0, seed: 0, respawn: 1 + i * 0.4 });
     this.resize();
     this.cam.x = this.player.x - this.W * 0.45;
   }
@@ -516,6 +524,8 @@ export class City2D {
     this.updateCars(dt);
     this.updateRain(dt);
     this.updateParticles(dt);
+    this.updateShards(dt);
+    this.talkCd = Math.max(0, this.talkCd - dt);
 
     // lightning
     this.nextLightning -= dt;
@@ -564,7 +574,8 @@ export class City2D {
   updateNPCs(dt) {
     const L = this.cam.x - 160, R = this.cam.x + this.W + 160;
     this.npcs = this.npcs.filter((n) => n.x > L - 200 && n.x < R + 200);
-    while (this.npcs.length < Math.round(this.W / 45)) {
+    // 实体数随视口与性能规模自适应（下限 3，保证街道不空）
+    while (this.npcs.length < Math.max(3, Math.round((this.W / 45) * this.entityScale))) {
       const init = this.npcs.length < 3 && this.time < 1;
       const side = Math.random() < 0.5;
       const x = init ? this.cam.x + Math.random() * this.W : side ? L - Math.random() * 60 : R + Math.random() * 60;
@@ -581,8 +592,165 @@ export class City2D {
     for (const n of this.npcs) {
       n.x += n.dir * n.sp * dt;
       n.phase += dt * n.sp * 0.2;
+      if (n.talkT) n.talkT = Math.max(0, n.talkT - dt);
     }
     this.npcs.sort((a, b) => a.depth - b.depth);
+  }
+
+  // ---------------- 玩法扩展：碎片 / NPC 对话 ----------------
+
+  /** 性能护栏：调整实体规模（NPC/碎片激活上限），只降不升由 main.js 控制 */
+  setEntityScale(k) {
+    this.entityScale = k;
+  }
+
+  /** 预渲染碎片精灵：像素菱形 + 光晕，避免每帧创建渐变对象造成 GC 抖动 */
+  makeShardSprite() {
+    const c = makeCanvas(14, 14), x = c.getContext('2d');
+    const g = x.createRadialGradient(7, 7, 1, 7, 7, 7);
+    g.addColorStop(0, 'rgba(41,240,255,0.55)');
+    g.addColorStop(1, 'rgba(41,240,255,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, 14, 14);
+    const R = 4;
+    for (let i = -R; i <= R; i++) {
+      const hw = R - Math.abs(i);
+      x.fillStyle = 'rgba(41,240,255,0.95)';
+      x.fillRect(7 - hw, 7 + i, hw * 2 + 1, 1);
+    }
+    x.fillStyle = '#ffffff';
+    x.fillRect(6, 5, 2, 4);
+    x.fillRect(5, 6, 4, 2);
+    return c;
+  }
+
+  spawnShard(s) {
+    const p = this.player;
+    // 在镜头范围内随机落位，但不直接砸在玩家脸上
+    let x = 0;
+    for (let k = 0; k < 8; k++) {
+      x = this.cam.x + (Math.random() * 1.5 - 0.75) * this.W;
+      if (Math.abs(x - p.x) > 70) break;
+    }
+    s.x = x;
+    // 悬浮高度控制在跳跃可达范围（跳高 ~38px），低空步行可捡、高空跳起可捡
+    s.y0 = this.FEET - 10 - Math.random() * 36;
+    s.seed = Math.random() * 6.28;
+    s.active = true;
+  }
+
+  updateShards(dt) {
+    const p = this.player;
+    const want = Math.max(4, Math.round(12 * this.entityScale));
+    let active = 0;
+    for (const s of this.shards) if (s.active) active += 1;
+    for (const s of this.shards) {
+      if (s.active) {
+        const sy = s.y0 + Math.sin(this.time * 2.2 + s.seed) * 3;
+        const dx = s.x - p.x, dy = sy - p.y;
+        // 距离平方比较，不开方（半径 24：步行可捡低空碎片，跳跃覆盖高空碎片）
+        if (dx * dx + dy * dy < 576) {
+          s.active = false;
+          s.respawn = 4 + Math.random() * 4; // 延迟重生，避免区域耗尽
+          active -= 1;
+          this.spawnSpark(s.x, sy);
+          if (this.onShardCollect) this.onShardCollect(s.x, sy);
+        }
+      } else {
+        s.respawn -= dt;
+        if (s.respawn <= 0 && active < want) {
+          this.spawnShard(s);
+          active += 1;
+        }
+      }
+    }
+  }
+
+  /** 收集时的粒子闪光（复用 splashes 池，带颜色） */
+  spawnSpark(x, y) {
+    for (let i = 0; i < 10; i++) {
+      this.splashes.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 150,
+        vy: -(40 + Math.random() * 100),
+        t: 0, life: 0.4 + Math.random() * 0.25,
+        col: i % 2 ? '#29f0ff' : '#ffd166',
+      });
+    }
+  }
+
+  drawShards() {
+    const l = this.l, t = this.time;
+    l.globalCompositeOperation = 'lighter';
+    for (const s of this.shards) {
+      if (!s.active) continue;
+      const x = Math.round(s.x - this.cam.x);
+      if (x < -16 || x > this.W + 16) continue;
+      const y = Math.round(s.y0 + Math.sin(t * 2.2 + s.seed) * 3);
+      l.globalAlpha = 0.7 + 0.3 * Math.sin(t * 5 + s.seed * 2);
+      l.drawImage(this.shardSprite, x - 7, y - 7);
+    }
+    l.globalAlpha = 1;
+    l.globalCompositeOperation = 'source-over';
+  }
+
+  /** 最近的可对话 NPC（同一地面层，横向距离平方判定） */
+  nearestNPC(maxDist) {
+    const p = this.player;
+    let best = null, bd = maxDist * maxDist;
+    for (const n of this.npcs) {
+      const dx = n.x - p.x;
+      const d2 = dx * dx;
+      if (d2 < bd) { bd = d2; best = n; }
+    }
+    return best;
+  }
+
+  /** 桌面按 E 对话。返回台词或 null */
+  tryTalk() {
+    if (this.talkCd > 0) return null;
+    const n = this.nearestNPC(38);
+    if (!n) return null;
+    this.talkCd = 2.5;
+    n.talkT = 1.2;
+    n.line = pick(Math.random, NPC_LINES);
+    return n.line;
+  }
+
+  /** 触屏点击对话：屏幕坐标 → 世界坐标，就近匹配 NPC */
+  tryTalkAt(clientX, clientY) {
+    if (this.talkCd > 0) return null;
+    const wx = (clientX / window.innerWidth) * this.W + this.cam.x;
+    let best = null, bd = 28 * 28;
+    for (const n of this.npcs) {
+      const dx = n.x - wx;
+      const d2 = dx * dx;
+      if (d2 < bd) { bd = d2; best = n; }
+    }
+    if (!best) return null;
+    this.talkCd = 2.5;
+    best.talkT = 1.2;
+    best.line = pick(Math.random, NPC_LINES);
+    return best.line;
+  }
+
+  /** 可对话 NPC 头顶的按键提示气泡 */
+  drawTalkHint() {
+    if (!this.talkKey) return;
+    const n = this.nearestNPC(38);
+    if (!n) return;
+    const l = this.l;
+    const x = Math.round(n.x - this.cam.x), y = this.FEET + n.depth - n.h - 12;
+    l.fillStyle = 'rgba(8,3,18,0.85)';
+    l.fillRect(x - 5, y - 2, 11, 11);
+    const ac = this.pal ? this.pal.a : '#29f0ff';
+    l.fillStyle = ac;
+    l.fillRect(x - 5, y - 2, 11, 1);
+    l.fillRect(x - 5, y + 8, 11, 1);
+    l.fillRect(x - 5, y - 2, 1, 11);
+    l.fillRect(x + 5, y - 2, 1, 11);
+    drawTiny(l, this.talkKey, x - 2, y + 1, '#ffffff');
+    l.fillRect(x, y + 9, 1, 3);
   }
 
   updateCars(dt) {
@@ -696,7 +864,7 @@ export class City2D {
     this.drawRoad(pal);
     this.drawRain(this.frontRain, 'rgba(200,215,255,0.42)', 0.2);
     for (const s of this.splashes) {
-      l.fillStyle = `rgba(200,220,255,${0.7 * (1 - s.t / s.life)})`;
+      l.fillStyle = rgba(s.col || '#c8dcff', 0.7 * (1 - s.t / s.life));
       l.fillRect(Math.round(s.x - this.cam.x), Math.round(s.y), 1, 1);
     }
     if (this.flash > 0) { l.fillStyle = `rgba(200,190,255,${this.flash * 0.12})`; l.fillRect(0, 0, W, H); }
@@ -1026,6 +1194,8 @@ export class City2D {
     for (const n of this.npcs) if (n.depth < 0) this.drawNPC(n);
     this.drawPlayer();
     for (const n of this.npcs) if (n.depth >= 0) this.drawNPC(n);
+    this.drawShards();
+    this.drawTalkHint();
     // curb
     l.fillStyle = mixHex('#2a1f3e', pal.haze, 0.2);
     l.fillRect(0, this.ROAD - 2, W, 2);

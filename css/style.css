@@ -194,3 +194,43 @@ body[data-mode='2d'] .tbtns [data-btn='down'] { display: none; }
   .title-en { margin-top: 10px; }
   #banner { top: 30%; }
 }
+
+/* ---------- 玩法 HUD：任务卡 / 积分板 ---------- */
+#questCard {
+  left: 18px;
+  bottom: calc(34px + var(--ctrlH, 0px));
+  width: 252px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  transform: translateY(30px);
+  opacity: 0;
+  transition: 0.9s cubic-bezier(.2, .9, .2, 1) 0.6s;
+}
+body.entered #questCard { transform: none; opacity: 1; }
+#questCard .ttl { font-family: var(--vt); font-size: 15px; letter-spacing: 2px; color: var(--accent); margin-bottom: 6px; }
+#qTitle { font-size: 13px; color: #fff; letter-spacing: 1px; }
+#qDesc { margin-top: 4px; line-height: 1.5; }
+.q-bar { margin-top: 8px; height: 8px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); }
+.q-bar i { display: block; width: 0; height: 100%; background: repeating-linear-gradient(90deg, var(--cyan) 0 6px, transparent 6px 8px); box-shadow: 0 0 10px var(--cyan); transition: width 0.25s steps(6); }
+#qProg { margin-top: 5px; text-align: right; font-family: var(--vt); font-size: 15px; color: var(--cyan); }
+
+#scoreBoard {
+  right: 18px;
+  bottom: calc(34px + var(--brH, 0px));
+  display: flex;
+  gap: 16px;
+  padding: 9px 16px;
+  transform: translateY(30px);
+  opacity: 0;
+  transition: 0.9s cubic-bezier(.2, .9, .2, 1) 0.7s;
+}
+body.entered #scoreBoard { transform: none; opacity: 1; }
+#scoreBoard .sc { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 40px; }
+#scoreBoard b { font-family: var(--vt); font-size: 18px; line-height: 18px; color: #fff; text-shadow: 0 0 10px var(--cyan); }
+#scoreBoard .sc:nth-child(2) b { color: var(--pink); text-shadow: 0 0 10px var(--pink); }
+#scoreBoard i { font-style: normal; font-size: 10px; letter-spacing: 2px; color: rgba(255, 255, 255, 0.45); }
+
+/* 触屏布局：任务卡移到摇杆上方（摇杆在左下），积分板移到顶部居中 */
+body.touch #questCard { left: 10px; bottom: 192px; width: 205px; padding: 10px 12px; }
+body.touch #scoreBoard { left: 50%; right: auto; bottom: auto; top: 10px; padding: 6px 12px; transform: translate(-50%, 30px); }
+body.touch.entered #scoreBoard { transform: translate(-50%, 0); }

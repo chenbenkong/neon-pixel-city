@@ -2,13 +2,85 @@ import { AudioEngine } from './audio.js';
 import { Input } from './input.js';
 import { City2D } from './city2d.js';
 import { Transition } from './transition.js';
-import { TRACKS } from './data.js';
+import { TRACKS, DISTRICTS } from './data.js';
+import { Progress } from './progress.js';
+import { QuestSystem } from './quest.js';
 
 const $ = (s) => document.querySelector(s);
 const audio = new AudioEngine();
 const stage = $('#stage');
 const input = new Input(stage);
 const fx = new Transition($('#fx'));
+
+// ---------- 玩法扩展：存档 / 任务 / 性能护栏 ----------
+const save = new Progress();
+const quest = new QuestSystem(save, {
+  banner, toast, audio, refreshScore,
+  getCity3d: () => city3d,
+  randomDistrict: () => DISTRICTS[Math.floor(Math.random() * DISTRICTS.length)],
+});
+// 性能护栏：平均帧时长 >22ms 实体减 20%，>33ms 再减半；只降不升，避免抖动
+const perf = { acc: 0, n: 0, scale: 1, done: false };
+function applyEntityScale() {
+  if (city2d) city2d.setEntityScale(perf.scale);
+  if (city3d) city3d.setEntityScale(perf.scale);
+}
+function perfMonitor(ms) {
+  if (!entered || perf.done) return;
+  perf.acc += ms;
+  perf.n += 1;
+  if (perf.n < 90) return; // 约 1.5 秒窗口
+  const avg = perf.acc / perf.n;
+  perf.acc = 0;
+  perf.n = 0;
+  if (avg > 33 && perf.scale > 0.4) perf.scale = perf.scale <= 0.8 ? 0.4 : 0.8;
+  else if (avg > 22 && perf.scale >= 1) perf.scale = 0.8;
+  else return;
+  perf.done = perf.scale <= 0.4;
+  applyEntityScale();
+  toast('性能模式 · 场景实体已精简');
+}
+// 积分 / 碎片 / 纪计 HUD（只在数值变化时改 DOM，由 hud() 节流器与事件驱动）
+const scoreEl = $('#scScore'), shardEl = $('#scShard'), bestEl = $('#scBest');
+let lastScore = '', lastShard = '', lastBest = '';
+function refreshScore() {
+  const s = String(save.mem.score), h = String(save.mem.shards);
+  const b = save.mem.raceBest === null ? '--' : save.mem.raceBest + 's';
+  if (s !== lastScore) { scoreEl.textContent = s; lastScore = s; }
+  if (h !== lastShard) { shardEl.textContent = h; lastShard = h; }
+  if (b !== lastBest) { bestEl.textContent = b; lastBest = b; }
+}
+/** 碎片收集统一入口（2D/3D 共用） */
+function onShardCollect() {
+  save.addShard();
+  save.addScore(10);
+  quest.onShard();
+  audio.blip(1900, 0.05, 0.05);
+  const sh = save.mem.shards;
+  quest.onAchievement('first_shard');
+  if (sh >= 10) quest.onAchievement('shard_10');
+  if (sh >= 50) quest.onAchievement('shard_50');
+  if (sh >= 100) quest.onAchievement('shard_100');
+  if (save.mem.score >= 1000) quest.onAchievement('rich');
+  refreshScore();
+}
+
+// 轻量调试快照：供自动化验证与排障读取。getter 惰性求值，不访问则零每帧开销。
+window.__neonDebug = {
+  talks: 0,
+  get stats() {
+    var q = quest.current;
+    return {
+      mode: mode, entered: entered,
+      score: save.mem.score, shards: save.mem.shards,
+      questsDone: save.mem.questsDone, raceBest: save.mem.raceBest,
+      districts: Object.keys(save.mem.districts || {}).length,
+      achievements: Object.keys(save.mem.achievements || {}).length,
+      questType: q ? q.type : null, questDone: q ? q.done : 0, questN: q ? q.n : 0,
+      talks: window.__neonDebug.talks,
+    };
+  },
+};
 
 const IDLE = { down: () => false, hit: () => false, joy: { x: 0, y: 0 }, btn: {}, drag: { dx: 0, dy: 0, active: false }, wheel: 0, touchJump: false };
 const DEMO = { ...IDLE, down: (...c) => c.includes('KeyD') };
@@ -100,6 +172,8 @@ async function boot() {
   progress(8);
   await fonts;
   city2d = new City2D($('#c2d'), audio);
+  city2d.onShardCollect = onShardCollect;
+  city2d.talkKey = isTouch ? null : 'E'; // 触屏无 E 键，隐藏按键提示（点击对话）
   requestAnimationFrame(frame);
   progress(24);
   city3dReady = loadCity3D()
@@ -107,6 +181,10 @@ async function boot() {
       city3d = new City3D($('#c3d'), audio);
       city3d.update(0.016, IDLE);
       city3d.render();
+      // 玩法接线：碎片收集 / 竞速检查点（窄接口，three 对象不出 city3d）
+      city3d.onShardCollect = onShardCollect;
+      city3d.onRaceCheckpoint = (idx, total) => quest.onCheckpoint(idx, total);
+      city3d.setEntityScale(perf.scale);
       return city3d;
     })
     .catch((e) => { console.error(e); toast('3D 模块加载失败：你的设备可能不支持 WebGL2'); return null; });
@@ -133,6 +211,7 @@ function enter() {
   city2d.enter();
   updateControls();
   updateTrack(0);
+  if (quest.idx === 0) quest.next(); // 进入城市后派发第一个任务
   setTimeout(() => banner('PIXEL STREET', '2D · 像素街道'), 900);
   if (innerHeight > innerWidth) setTimeout(() => toast('横屏浏览体验更佳'), 4500);
 }
@@ -170,6 +249,8 @@ async function switchMode() {
       (to === '3d' ? city3d : city2d).enter();
       updateControls();
       lastDistrict = null;
+      quest.onModeChanged(to); // 竞速任务只在 3D 进行
+      if (to === '3d') quest.onAchievement('first_flight');
     },
     onDone: () => {
       busy = false;
@@ -208,6 +289,20 @@ addEventListener('keydown', (e) => {
 });
 addEventListener('pointerdown', () => audio.resume());
 
+// 触屏点击对话：短促点按（位移 <10px、时长 <500ms）就近找 NPC
+let tapInfo = null;
+stage.addEventListener('pointerdown', (e) => { tapInfo = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+stage.addEventListener('pointerup', (e) => {
+  const tp = tapInfo;
+  tapInfo = null;
+  if (!tp || !entered || busy || mode !== '2d' || !city2d) return;
+  const dx = e.clientX - tp.x, dy = e.clientY - tp.y;
+  if (dx * dx + dy * dy < 100 && performance.now() - tp.t < 500) {
+    const line = city2d.tryTalkAt(e.clientX, e.clientY);
+    if (line) { toast(line, 3000); audio.blip(1300, 0.05, 0.04); }
+  }
+});
+
 // ---------- HUD ----------
 const CONTROLS = {
   '2d': [
@@ -231,6 +326,16 @@ function updateControls() {
     return `<div class="row">${keys}<span class="t">${r[r.length - 1]}</span></div>`;
   });
   $('#controls').innerHTML = `<div class="ttl">CONTROLS // 操作</div>${rows.join('')}<div class="row"><kbd>M</kbd><span class="t">音乐</span><kbd>F</kbd><span class="t">全屏</span></div>`;
+  measureHUD();
+}
+
+/** 测量左下/右下面板高度，供任务卡与积分板定位（避免遮挡） */
+function measureHUD() {
+  const c = $('#controls');
+  const br = document.querySelector('.hud-br');
+  const st = document.documentElement.style;
+  st.setProperty('--ctrlH', (c ? c.offsetHeight : 0) + 'px');
+  st.setProperty('--brH', (br ? br.offsetHeight : 0) + 'px');
 }
 
 function updateTrack(i) {
@@ -277,6 +382,12 @@ function hud(dt, scene) {
       den.textContent = info.en;
       dname.classList.remove('swap'); void dname.offsetWidth; dname.classList.add('swap');
       document.documentElement.style.setProperty('--accent', info.color);
+      // 玩法接线：区域打卡（任务 + 六区成就）
+      if (entered) {
+        save.visitDistrict(info.zh);
+        quest.onDistrict(info.zh);
+        if (save.districtCount() >= 6) quest.onAchievement('all_districts');
+      }
     }
     tele.innerHTML = info.tele.map((t) => `<span>${t}</span>`).join('');
     const d = new Date(start + performance.now());
@@ -317,7 +428,14 @@ function frame(now) {
     scene.render();
   }
   fx.update(dt);
+  quest.update(dt); // 竞速计时等（内部自行判断空转，代价极低）
   hud(dt, scene);
+  // NPC 对话：桌面 E 键（复用 input 的统一按键状态，避免重复 keydown 监听）
+  if (entered && !busy && mode === '2d' && city2d && input.hit('KeyE')) {
+    const line = city2d.tryTalk();
+    if (line) { window.__neonDebug.talks += 1; toast(line, 3000); audio.blip(1300, 0.05, 0.04); }
+  }
+  perfMonitor(dt * 1000);
   input.endFrame();
   requestAnimationFrame(frame);
 }
@@ -326,8 +444,19 @@ let rsz = 0;
 addEventListener('resize', () => {
   clearTimeout(rsz);
   // 不使用可选链语法，避免旧内核浏览器在解析阶段抛 SyntaxError
-  rsz = setTimeout(function () { if (city2d) city2d.resize(); if (city3d) city3d.resize(); fx.resize(); }, 120);
+  rsz = setTimeout(function () { if (city2d) city2d.resize(); if (city3d) city3d.resize(); fx.resize(); measureHUD(); }, 120);
 });
+
+// 任务卡 DOM 注入 + 初始渲染
+quest.init({
+  card: $('#questCard'),
+  title: $('#qTitle'),
+  desc: $('#qDesc'),
+  bar: $('#qBar'),
+  prog: $('#qProg'),
+});
+quest.renderCard();
+refreshScore();
 
 updateControls();
 boot();
