@@ -389,3 +389,39 @@ body.dying #stage { filter: saturate(.3) hue-rotate(-25deg); transition: filter 
   pointer-events: auto; cursor: pointer;
 }
 .q-skip:hover { background: rgba(255,56,96,.3); color: #fff; }
+
+/* ================================================================
+   T05：战斗 HUD 补充字段 + 移入面板的时钟/按键表
+   P5「常驻元素 ≤6」：本轮把时钟与常驻按键表移出游戏画面，
+   新增的战斗 HUD 算 1 个常驻容器。
+   ================================================================ */
+#combatHud .st {
+  display: flex; align-items: baseline; gap: 4px;
+  font-family: var(--vt); padding-left: 12px; border-left: 1px solid rgba(255,255,255,.12);
+}
+#combatHud .st b { font-size: 15px; color: #fff; font-weight: normal; min-width: 20px; text-align: right; }
+#combatHud .st i { font-style: normal; font-size: 10px; color: rgba(255,255,255,.4); margin-right: 6px; }
+#combatHud .st b:last-of-type { color: var(--cyan); min-width: 34px; }
+body.touch #combatHud .st b { font-size: 13px; }
+body.touch #combatHud .st i { display: none; }
+
+/* 面板内的时钟与按键表 */
+.mm-clock {
+  margin: 14px 0 10px; font-family: var(--vt); font-size: 12px;
+  letter-spacing: 2px; color: rgba(255,255,255,.45);
+}
+.mm-keys { text-align: left; margin: 6px 0 4px; }
+.mm-keys .ttl {
+  font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,.35);
+  margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px dashed rgba(255,255,255,.1);
+}
+.mm-keys .row {
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  padding: 3px 0; font-size: 11px; color: rgba(255,255,255,.62);
+}
+.mm-keys .row .t { margin-right: 8px; }
+.mm-keys kbd {
+  display: inline-block; min-width: 20px; padding: 2px 5px; text-align: center;
+  font-family: var(--vt); font-size: 10px; color: var(--cyan);
+  background: rgba(41,240,255,.09); border: 1px solid rgba(41,240,255,.28);
+}

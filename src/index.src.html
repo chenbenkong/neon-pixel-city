@@ -35,7 +35,7 @@
     </div>
 
     <div class="hud-tc">
-      <span id="clock">2077.09.24 · 23:47:00</span><span class="sep">//</span><span id="weather">酸雨</span>
+      <span id="weather">酸雨</span>
     </div>
 
     <div class="hud-tr">
@@ -53,8 +53,7 @@
       </div>
     </div>
 
-    <div class="hud-bl panel" id="controls"></div>
-
+    <!-- P5「常驻元素 ≤6」：常驻按键表已移入菜单与暂停面板，游戏画面不再常驻它 -->
     <div class="hud-br panel">
       <div class="np-label">NOW PLAYING · 实时合成</div>
       <div class="np-title" id="track">霓虹夜雨 · Neon Rain</div>
@@ -104,6 +103,8 @@
       <div class="mm-sub">NEON//CITY</div>
       <button id="btnStart" class="mm-btn primary">▶ 开 始 游 戏</button>
       <button id="btnHelp" class="mm-btn">玩法说明</button>
+      <div class="mm-clock" id="menuClock">2077.09.24 · 00:00</div>
+      <div class="mm-keys" id="controls"></div>
       <div class="mm-best">最高分 <b id="menuBest">0</b> <span id="menuGrade">C</span></div>
     </div>
   </div>
@@ -140,6 +141,8 @@
       <button id="pauseResume" class="mm-btn primary">继 续 <em>(ESC)</em></button>
       <button id="pauseRetry" class="mm-btn">重 试 <em>(R)</em></button>
       <button id="pauseMenu" class="mm-btn">返回菜单</button>
+      <div class="mm-clock" id="pauseClock">2077.09.24 · 00:00</div>
+      <div class="mm-keys" id="controlsPause"></div>
       <div class="pause-vol">
         <label>音乐 <input type="range" id="volMusic" min="0" max="100" value="62" disabled></label>
         <label>音效 <input type="range" id="volSfx" min="0" max="100" value="90" disabled></label>

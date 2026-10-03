@@ -6,6 +6,7 @@ import { TRACKS, DISTRICTS } from './data.js';
 import { Progress } from './progress.js';
 import { QuestSystem } from './quest.js';
 import { GameState, RunStats } from './state.js';
+import { Hud } from './hud.js';
 import { SCORE, HUD, AUDIO } from './config.js';
 
 const AUDIO_BASE = AUDIO.MUSIC_BASE;
@@ -32,6 +33,8 @@ const quest = new QuestSystem(save, {
   getCity3d: () => city3d,
   randomDistrict: () => DISTRICTS[Math.floor(Math.random() * DISTRICTS.length)],
   isGameState: function () { return gs.is.apply(gs, arguments); },
+  // quest 需要知道当前维度：竞速任务在 3D 里派发时要能立刻开跑
+  isMode3D: function () { return gs.mode === '3d'; },
 });
 
 /**
@@ -94,7 +97,7 @@ function onShardCollect() {
     city2d.addScore(SCORE.SHARD);
   }
   quest.onShard();
-  audio.blip(1900, 0.05, 0.05);
+  if (audio.sfxShard) audio.sfxShard();
   const sh = save.mem.shards;
   quest.onAchievement('first_shard');
   if (sh >= 10) quest.onAchievement('shard_10');
@@ -110,6 +113,8 @@ window.__neonDebug = {
   get city2d() { return city2d; },
   get state() { return gs.cur; },
   get quest() { return quest; },
+  get audio() { return audio; },
+  get hud() { return hudUI; },
   get quest() { return quest; },
   get gs() { return gs; },
   get stats() {
@@ -327,7 +332,7 @@ async function switchMode() {
   const gate = gs.beginShift();
   if (gate === 'blocked') {
     toast('战斗进行中 · 清完这一波才能切换维度');
-    if (audio.uiConfirm) audio.uiCancel();
+    if (audio.sfxUiCancel) audio.sfxUiCancel();
     return;
   }
   if (gate !== true) return;
@@ -443,7 +448,9 @@ function updateControls() {
     const keys = r.slice(0, -1).map((k) => `<kbd>${k}</kbd>`).join('');
     return `<div class="row">${keys}<span class="t">${r[r.length - 1]}</span></div>`;
   });
-  $('#controls').innerHTML = `<div class="ttl">CONTROLS // 操作</div>${rows.join('')}<div class="row"><kbd>M</kbd><span class="t">音乐</span><kbd>F</kbd><span class="t">全屏</span></div>`;
+  const html = `<div class="ttl">CONTROLS // 操作</div>${rows.join('')}<div class="row"><kbd>M</kbd><span class="t">音乐</span><kbd>F</kbd><span class="t">全屏</span></div>`;
+  // 菜单与暂停面板各一份（按键表不再常驻于游戏画面）
+  ['#controls', '#controlsPause'].forEach((sel) => { const el = $(sel); if (el) el.innerHTML = html; });
 }
 
 function updateTrack(i) {
@@ -472,7 +479,9 @@ function toast(msg) {
 }
 
 let lastDistrict = null, hudAcc = 0;
-const tele = $('#tele'), dname = $('#dname'), den = $('#den'), clock = $('#clock');
+const tele = $('#tele'), dname = $('#dname'), den = $('#den');
+// P5：时钟与按键表已从游戏画面移入菜单/暂停面板（常驻元素 ≤6）
+const clocks = [$('#menuClock'), $('#pauseClock')].filter(Boolean);
 const start = new Date(2077, 8, 24, 23, 47, 0).getTime();
 function hud(dt, scene) {
   hudAcc += dt;
@@ -497,9 +506,11 @@ function hud(dt, scene) {
       }
     }
     tele.innerHTML = info.tele.map((t) => `<span>${t}</span>`).join('');
+    // 面板时钟（不在游戏画面上）。仍走 10Hz 节流，不进 rAF 热路径。
     const d = new Date(start + performance.now());
     const p = (n) => String(n).padStart(2, '0');
-    clock.textContent = `2077.09.24 · ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    const txt = `2077.09.24 · ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    for (let i = 0; i < clocks.length; i++) clocks[i].textContent = txt;
   }
 }
 
@@ -546,7 +557,7 @@ function frame(now) {
   fx.update(simDt);
   if (gs.is('PLAYING')) quest.update(simDt); // 竞速计时等
   hud(simDt, scene);
-  updateCombatHud();
+  hudUI.update(simDt, gs);
   // NPC 对话：桌面 E 键（复用 input 的统一按键状态，避免重复 keydown 监听）
   if (gs.is('PLAYING') && !gs.shifting && gs.mode === '2d' && city2d && input.hit('KeyE')) {
     const line = city2d.tryTalk();
@@ -590,6 +601,10 @@ function inputFor() {
 gs._gateLockSince = 0;
 gs.gatePhase = function () {
   if (!city2d) return null;
+  // 3D 里没有战斗，门控这个概念本就是为 2D 设计的。
+  // 不放行的话，玩家在 3D 按 TAB 会收到「战斗进行中 · 清完这一波才能切换维度」——
+  // 这句话在 3D 里是假的，玩家会以为自己漏掉了什么（drone 状态被冻结在 chase）。
+  if (gs.mode === '3d') { gs._gateLockSince = 0; return 'idle'; }
   let chasing = false;
   const ds = city2d.enemies.drones;
   for (let i = 0; i < ds.length; i++) {
@@ -670,6 +685,7 @@ function retryRun() {
   if (!city2d) return;
   city2d.resetRun();
   city2d.runTime = 0;
+  hudUI.reset();
   gs.stats.reset();
   if (gs.is('RESULT')) gs.go('PLAYING', { fresh: true });
   else gs.go('PLAYING');
@@ -740,50 +756,8 @@ on('btnHelp', function () { showPanel('helpPanel'); });
 on('btnHelpBack', function () { showPanel('menuPanel'); });
 on('btnStart', function () { if (gs.is('MENU')) retryRun(); });
 
-/** 战斗 HUD 的 4 项常驻信息。全部脏检查，稳态零 DOM 写入（T05 判据 10） */
-const hudCache = { hp: -1, label: '', remain: -1, combo: -1, low: null, hurt: '' };
-function updateCombatHud() {
-  if (!city2d || !gs.is('PLAYING')) return;
-  const m = city2d.getHudModel();
-  if (m.hp !== hudCache.hp) {
-    hudCache.hp = m.hp;
-    const icons = document.querySelectorAll('#hpIcons i');
-    for (let i = 0; i < icons.length; i++) icons[i].classList.toggle('on', i < m.hp);
-    const box = document.getElementById('hpIcons');
-    box.classList.toggle('low', m.hp === 1);
-    // 受击红闪：移除 + 强制 reflow + 添加，重启一次性动画
-    box.classList.remove('hurt');
-    void box.offsetWidth;
-    if (m.hp < HUD.MAX_HP) box.classList.add('hurt');
-  }
-  if (m.label !== hudCache.label) {
-    hudCache.label = m.label;
-    const el = document.getElementById('wvLabel');
-    if (el) el.textContent = m.label;
-  }
-  if (m.remaining !== hudCache.remain) {
-    hudCache.remain = m.remaining;
-    const el = document.getElementById('wvRemain');
-    if (el) el.textContent = '剩余 ' + m.remaining;
-  }
-  if (m.combo !== hudCache.combo) {
-    hudCache.combo = m.combo;
-    const box = document.getElementById('comboBox');
-    if (box) box.classList.toggle('on', m.combo > 1);
-    const n = document.getElementById('cbNum');
-    if (n) n.textContent = String(Math.max(0, m.combo));
-  }
-  // 受击渐晕：#hurtVignette 是 inset:0 的全屏元素，每帧改它的 opacity 会强制
-  // 合成器重建整屏图层（实测 2D +4ms、3D +7ms）。必须脏检查：
-  // 未受击时值恒为 '0'，一次写入后就再不碰。
-  const hv = city2d.feedback.hurtAlpha();
-  const hvStr = hv > 0 ? String(Math.min(1, hv * 1.8)) : '0';
-  if (hvStr !== hudCache.hurt) {
-    hudCache.hurt = hvStr;
-    const v = document.getElementById('hurtVignette');
-    if (v) v.style.opacity = hvStr;
-  }
-}
+// 战斗 HUD 已抽到 js/hud.js（Hud 类，12 字段脏检查）。这里是实例化。
+const hudUI = new Hud(city2d, audio).bind();
 
 let rsz = 0;
 addEventListener('resize', () => {

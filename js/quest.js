@@ -64,11 +64,19 @@ export class QuestSystem {
     }
     this.current = q;
     if (q.type === 'race') {
-      // 竞速任务需要 3D；若当前不在 3D，提示玩家切换，等 onModeChanged 再开跑
+      // 竞速任务需要 3D。若当前不在 3D，提示玩家切换，等 onModeChanged 再开跑。
       this.raceActive = false;
       this.waitT = 0;
       this._raceLeft = undefined;
-      this.hooks.toast('按 TAB 进入 3D 开始竞速（45 秒内未前往将自动改派）');
+      // 但如果**此刻已经在 3D 里**，就必须立刻开跑 ——
+      // 否则 startRace 只会被 onModeChanged('3d') 触发，玩家停在 3D 不动就永远开不了跑，
+      // 任务只能等超时被改派。实测 24 项回归的 race_checkpoints_e2e 就挂在这里：
+      // 2D 阶段结束切进 3D 后才派发的 race，既开不了跑也等不到玩家切回来。
+      if (this.hooks.isMode3D && this.hooks.isMode3D()) {
+        this.startRace(q);
+      } else {
+        this.hooks.toast('按 TAB 进入 3D 开始竞速（45 秒内未前往将自动改派）');
+      }
     } else {
       this.hooks.toast('新任务 · ' + q.title);
     }

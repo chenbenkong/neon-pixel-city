@@ -68,6 +68,31 @@ export class AudioEngine {
     this.sfx.gain.value = 0.9;
     this.sfx.connect(this.comp);
 
+    // ---- 双总线（T05）----
+    // 为什么拆两条：战斗反馈和 UI 提示的响度策略完全不同。
+    //   sfxBus —— 战斗反馈，允许偏响（要盖过环境音），且不受 duck 影响
+    //   uiBus  —— 菜单/确认，偏柔，且 duck 时同步压低（菜单里提示音不该和音乐抢）
+    // 合流点放在 comp 之前，两条都能吃到压缩器，避免叠加时削顶。
+    this.sfxBus = this.sfx;                 // 保持既有 this.sfx 引用的向后兼容
+    this.uiBus = c.createGain();
+    this.uiBus.gain.value = 0.55;
+    this.uiBus.connect(this.comp);
+    // 战斗 duck 用的独立衰减器：只压 sfxBus，不压 uiBus
+    this.sfxDuck = c.createGain();
+    this.sfxDuck.gain.value = 1;
+    this.sfxDuck.connect(this.sfx);
+    this.uiDuck = c.createGain();
+    this.uiDuck.gain.value = 1;
+    this.uiDuck.connect(this.uiBus);
+
+    // 音乐 duck 的目标增益（setMusicDuck 改这个）
+    this.musicBase = 0.62;
+    this.music.gain.value = this.musicBase;
+
+    // 11 个战斗音色的「签名表」：每次播放都记一笔，供自动化验收断言
+    // 「11 个音色确实互不相同」。只看波形名字是自证，签名才是证据。
+    this.sfxLog = [];
+
     // reverb
     this.reverb = c.createConvolver();
     this.reverb.buffer = this.impulse(3.4, 2.6);
@@ -166,6 +191,7 @@ export class AudioEngine {
     const g2 = c.createGain();
     g2.gain.value = 0.16;
     n2.connect(lp2); lp2.connect(g2); g2.connect(this.comp);
+    this.ambRumble = g2;   // 存引用：setAmbienceFor 按状态调它
     n2.start();
     // engine (3D)
     this.engOsc = c.createOscillator();
@@ -608,4 +634,205 @@ export class AudioEngine {
     n.connect(f); f.connect(g); g.connect(this.sfx); g.connect(this.revSend);
     n.start(t); n.stop(t + 5);
   }
+  // ================================================================
+  // T05：战斗音效（11 个音色）+ 音乐 duck + 环境音分层
+  //
+  // 设计约束（PM 诊断出的核心问题）：
+  //   批次 2 之前，命中/击杀/受伤/拾取/UI 全部走同一个 blip() 正弦，
+  //   「画面会闪白会震屏，但声音和捡碎片一模一样」—— 战斗闭环的感知价值被废掉一半。
+  //   所以这 11 个音色必须在**波形 / 频段 / 包络形状 / 时长**四个维度上互相可辨，
+  //   而不是换几个频率而已。
+  //
+  // 每个音色播放时往 this.sfxLog 记一笔 { id, wave, f0, f1, dur, peak }，
+  // 供自动化验收断言「11 个签名互不相同」——这是"可辨性"的客观证据，
+  // 比"我给它们起了不同的名字"有说服力。
+  // ================================================================
+
+  /**
+   * 记一笔音色签名。peak 是总线增益，wave 是振荡器/噪声源类型。
+   * 验收脚本据此断言 11 个签名的 (wave, 频段, 时长) 组合两两不同。
+   */
+  _log(id, sig) {
+    this.sfxLog.push(Object.assign({ id: id, t: +(this.ctx ? this.ctx.currentTime.toFixed(3) : 0) }, sig));
+    if (this.sfxLog.length > 64) this.sfxLog.splice(0, this.sfxLog.length - 64);
+  }
+
+  /** 包络打音：AD 起 → 指数衰减。tone 用振荡器，noise 用白噪声+带通 */
+  _hit(id, opts) {
+    if (!this.ctx || this.muted) return;
+    const c = this.ctx, t = c.currentTime + (opts.delay || 0);
+    const o = opts;
+    const g = c.createGain();
+    g.connect(o.bus || this.sfxDuck);
+    if (o.rev) g.connect(this.revSend);
+    // 起音→衰减
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.vol), t + (o.atk || 0.004));
+    if (o.hold) g.gain.setValueAtTime(Math.max(0.0002, o.vol), t + (o.atk || 0.004) + o.hold);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
+
+    let src;
+    if (o.wave === 'noise') {
+      src = this.noiseSrc(false);
+      src.playbackRate.value = o.rate || 1;
+    } else {
+      src = c.createOscillator();
+      src.type = o.wave;
+      src.frequency.setValueAtTime(o.f0, t);
+      if (o.f1 && o.f1 !== o.f0) {
+        if (o.sweep === 'lin') src.frequency.linearRampToValueAtTime(o.f1, t + o.dur);
+        else src.frequency.exponentialRampToValueAtTime(Math.max(1, o.f1), t + o.dur);
+      }
+    }
+    let node = src;
+    if (o.filter) {
+      const f = c.createBiquadFilter();
+      f.type = o.filter;
+      f.frequency.setValueAtTime(o.ff0 || 1200, t);
+      if (o.ff1) f.frequency.exponentialRampToValueAtTime(Math.max(40, o.ff1), t + o.dur);
+      f.Q.value = o.q == null ? 1 : o.q;
+      node.connect(f); node = f;
+    }
+    node.connect(g);
+    src.start(t);
+    src.stop(t + o.dur + 0.06);
+    this._log(id, { wave: o.wave, f0: o.f0 || 0, f1: o.f1 || 0, dur: o.dur, vol: o.vol, filter: o.filter || '' });
+  }
+
+  // ---- 11 个战斗音色 ----
+
+  /** 1. 挥空：噪声 + 带通下扫。只有"空气被切开"的声音，没有音高。 */
+  sfxSwing() {
+    this._hit('swing', { wave: 'noise', dur: 0.16, vol: 0.16, filter: 'bandpass', ff0: 2600, ff1: 700, q: 1.4, atk: 0.006, rate: 1.2 });
+  }
+
+  /** 2. 命中：方波短促下滑 + 高频瞬态。硬、脆、有"打到东西"的实感。 */
+  sfxHit() {
+    this._hit('hit', { wave: 'square', f0: 620, f1: 300, dur: 0.085, vol: 0.2, atk: 0.002 });
+    this._hit('hitNoise', { wave: 'noise', dur: 0.05, vol: 0.13, filter: 'highpass', ff0: 3200, delay: 0.002 });
+  }
+
+  /** 3. 击杀：锯齿大幅下扫 + 碎裂噪声。比命中长 3 倍，低频多一倍，"东西碎了"。 */
+  sfxKill() {
+    this._hit('kill', { wave: 'sawtooth', f0: 480, f1: 70, dur: 0.26, vol: 0.24, atk: 0.003, rev: true });
+    this._hit('killNoise', { wave: 'noise', dur: 0.2, vol: 0.15, filter: 'bandpass', ff0: 1800, ff1: 300, q: 0.8, delay: 0.01, rate: 0.8 });
+  }
+
+  /** 4. 受伤：低频方波闷响，几乎不扫频。和命中的区别是**低**与**闷**。 */
+  sfxHurt() {
+    this._hit('hurt', { wave: 'square', f0: 190, f1: 120, dur: 0.22, vol: 0.26, atk: 0.002, filter: 'lowpass', ff0: 900 });
+  }
+
+  /** 5. 无敌：正弦双音微上行，玻璃感。和任何打击音的波形都不同。 */
+  sfxInvuln() {
+    this._hit('invuln', { wave: 'sine', f0: 880, f1: 1320, dur: 0.2, vol: 0.11, atk: 0.02, rev: true });
+    this._hit('invuln2', { wave: 'sine', f0: 1320, f1: 1760, dur: 0.18, vol: 0.08, atk: 0.02, delay: 0.07, rev: true });
+  }
+
+  /** 6. 连击升级：三角波三连音上行。唯一的"旋律型"战斗音，一听就是奖励。 */
+  sfxCombo(level) {
+    const base = 660 * Math.pow(1.06, Math.min(12, level || 0));
+    this._hit('combo', { wave: 'triangle', f0: base, dur: 0.09, vol: 0.15, atk: 0.004, rev: true });
+    this._hit('combo2', { wave: 'triangle', f0: base * 1.26, dur: 0.09, vol: 0.14, atk: 0.004, delay: 0.055, rev: true });
+    this._hit('combo3', { wave: 'triangle', f0: base * 1.5, dur: 0.14, vol: 0.15, atk: 0.004, delay: 0.11, rev: true });
+  }
+
+  /** 7. 波次开始：方波两音上行，张力感（不是奖励，是"来了"）。 */
+  sfxWaveStart() {
+    this._hit('waveStart', { wave: 'square', f0: 392, dur: 0.11, vol: 0.15, atk: 0.005, filter: 'lowpass', ff0: 2200 });
+    this._hit('waveStart2', { wave: 'square', f0: 523, dur: 0.16, vol: 0.16, atk: 0.005, delay: 0.12, filter: 'lowpass', ff0: 2400 });
+  }
+
+  /** 8. 波次清空：大三和弦 + 长释放。是全批次里最"亮"最"长"的音。 */
+  sfxWaveClear() {
+    const ns = [523.25, 659.25, 783.99];
+    for (let i = 0; i < ns.length; i++) {
+      this._hit('waveClear' + i, { wave: 'triangle', f0: ns[i], dur: 0.55, vol: 0.13, atk: 0.012, delay: i * 0.045, rev: true });
+    }
+  }
+
+  /** 9. 死亡：长锯齿下扫 + 低通闷住 + 混响。比击杀更长更闷更沉。 */
+  sfxDeath() {
+    this._hit('death', { wave: 'sawtooth', f0: 300, f1: 42, dur: 0.95, vol: 0.26, atk: 0.01, filter: 'lowpass', ff0: 700, rev: true });
+    this._hit('deathNoise', { wave: 'noise', dur: 0.7, vol: 0.1, filter: 'lowpass', ff0: 400, delay: 0.05, rate: 0.4 });
+  }
+
+  /** 10. 拾取：极高正弦短促上滑。位置在所有战斗音之上，混战里也听得见。 */
+  sfxShard() {
+    this._hit('shard', { wave: 'sine', f0: 1760, f1: 2637, dur: 0.1, vol: 0.13, atk: 0.002, rev: true });
+  }
+
+  /** 11. UI 确认：走 uiBus，正弦中频，柔和。与任何战斗音的音量/亮度都拉开。 */
+  sfxUiConfirm() {
+    this._hit('ui', { wave: 'sine', f0: 1046, dur: 0.07, vol: 0.16, atk: 0.003, bus: this.uiDuck });
+  }
+
+  /** 连击断掉：下行小三度，给"断了"的负反馈（与 sfxCombo 的上行形成对照）。 */
+  sfxComboBreak() {
+    this._hit('comboBreak', { wave: 'triangle', f0: 520, f1: 392, dur: 0.14, vol: 0.12, atk: 0.004 });
+  }
+
+  /** UI 取消：比确认低小三度、更闷，给"没做成"的负反馈。 */
+  sfxUiCancel() {
+    this._hit('uiCancel', { wave: 'sine', f0: 784, dur: 0.09, vol: 0.14, atk: 0.003, bus: this.uiDuck, filter: 'lowpass', ff0: 1600 });
+  }
+
+  // ---- 混音分层 ----
+
+  /**
+   * 音乐 duck。战斗时压低音乐给反馈让路，暂停/结算压得更低。
+   * @param {number} target 目标增益（相对 musicBase）
+   * @param {number} tau   过渡时间常数（秒）
+   */
+  setMusicDuck(target, tau) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const v = this.musicBase * (target == null ? 1 : target);
+    this.music.gain.setTargetAtTime(v, t, tau == null ? 0.12 : tau);
+    this.musicDuckLevel = target == null ? 1 : target;
+  }
+
+  /** 战斗时额外压低 sfxBus 之外的音乐侧链（pad/bass），让打击更突出 */
+  setCombatMix(on) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.duck.gain.setTargetAtTime(on ? 0.55 : 1, t, 0.15);
+    this.sfxDuck.gain.setTargetAtTime(on ? 1.15 : 1, t, 0.15);   // 略提 sfx 让它盖过音乐
+  }
+
+  /**
+   * 环境音分层：按游戏状态调四层（rain / rumble / engine / wind）的目标增益。
+   * 复用 startAmbience() 已建好的四层，不新增层（PM 明确四层已够）。
+   * mode 语义：
+   *   playing —— 正常游玩，rain 随波次强度，rumble 底噪
+   *   combat  —— 战斗中，rumble 抬一点点制造压迫感
+   *   paused   —— 全部压低，菜单/暂停不该有环境噪声
+   *   menu     —— 极低，只留一点底噪
+   *   result   —— 压低
+   */
+  setAmbienceFor(mode, intensity) {
+    if (!this.ctx || !this.rainGain) return;
+    const t = this.ctx.currentTime;
+    const k = intensity == null ? 1 : intensity;
+    const P = {
+      playing: { rain: 0.05 + k * 0.045, rumble: 0.16, motor: 0 },
+      combat:  { rain: 0.055 + k * 0.05, rumble: 0.22, motor: 0 },
+      paused:   { rain: 0.018, rumble: 0.06, motor: 0 },
+      menu:     { rain: 0.02, rumble: 0.08, motor: 0 },
+      result:   { rain: 0.015, rumble: 0.05, motor: 0 },
+    }[mode] || { rain: 0.05, rumble: 0.16, motor: 0 };
+    this.rainGain.gain.setTargetAtTime(P.rain, t, 0.6);
+    this.ambRumble && this.ambRumble.gain.setTargetAtTime(P.rumble, t, 0.6);
+    if (P.motor === 0 && this.engGain) this.engGain.gain.setTargetAtTime(0, t, 0.3);
+    this.ambMode = mode;
+  }
+
+  /** 拿最近的音色签名（验收脚本用）。limit<=0 表示全部 */
+  getSfxLog(limit) {
+    const l = limit && limit > 0 ? this.sfxLog.slice(-limit) : this.sfxLog.slice();
+    return l;
+  }
+
+  resetSfxLog() { this.sfxLog.length = 0; }
+
 }
