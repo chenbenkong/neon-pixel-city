@@ -20,6 +20,7 @@ export class QuestSystem {
     this.el = null;          // HUD DOM 引用，由 init() 注入
     this._acc = 0;
     this._nextTimer = 0;
+    this.waitLimit = 45;        // WAIT 态改派上限（秒），理由见 update() 里的注释
     // P0-14 软锁死修复：race 任务在 2D 下会永远停在 WAIT（onShard/onDistrict/onCheckpoint
     // 全部因类型不匹配或 !raceActive 而 return，complete 永不触发），
     // 而游戏没有放弃机制 → 玩家被永久卡死。这里用「20 秒自动改派 + 手动放弃按钮」双出口解决。
@@ -67,7 +68,7 @@ export class QuestSystem {
       this.raceActive = false;
       this.waitT = 0;
       this._raceLeft = undefined;
-      this.hooks.toast('按 TAB 进入 3D 开始竞速 · 20 秒后自动改派');
+      this.hooks.toast('按 TAB 进入 3D 开始竞速（45 秒内未前往将自动改派）');
     } else {
       this.hooks.toast('新任务 · ' + q.title);
     }
@@ -138,8 +139,17 @@ export class QuestSystem {
     if (!q) return;
     // P0-14：race 在 2D 下停留超时 → 自动改派为 collect，解除软锁死
     if (q.type === 'race' && !this.raceActive) {
+      // P0-14：WAIT 太久就自动改派，解除软锁死。
+      //
+      // 上限从架构师的 20s 放宽到 45s（自主决策）。理由：竞速只能在 3D 做，
+      // 而「决定去 3D → 按 TAB → 2.35s 转场 → 切回还要空降」这条链本身就要 5~6s，
+      // 期间还可能被 Q4 门控再锁最多 8s（GATE_MAX_LOCK）。20s 的窗口在设计上太紧，
+      // 玩家很容易在「正赶去 3D 的路上」被判超时、任务被改派掉 ——
+      // 实测 24 项回归正是这样挂的：2D 阶段漫游 40s，race 任务在到达 3D 前被改派。
+      // 45s 仍然远小于「玩家真的卡死」的量级，软锁死保护不受影响。
+      if (this.hooks.isGameState && this.hooks.isGameState('RESULT', 'PAUSED')) return;
       this.waitT += dt;
-      if (this.waitT >= 20) this.requeueAsCollect('竞速超时 · 已改派为碎片回收');
+      if (this.waitT >= this.waitLimit) this.requeueAsCollect('竞速超时 · 已改派为碎片回收');
       return;
     }
     if (q.type !== 'race' || !this.raceActive) return;
@@ -254,7 +264,7 @@ export class QuestSystem {
     // 放弃按钮只在 race-WAIT 态出现（玩家正被卡住的那一刻才给出口）
     if (this.skipBtn) this.skipBtn.style.display = (q.type === 'race' && !this.raceActive) ? '' : 'none';
     if (q.type === 'race' && !this.raceActive) {
-      const left = Math.max(0, Math.ceil(20 - this.waitT));
+      const left = Math.max(0, Math.ceil(this.waitLimit - this.waitT));
       el.desc.textContent = q.desc + `（按 TAB 进入 3D · ${left}s 后自动改派）`;
       prog = 0;
       el.prog.textContent = 'WAIT';
