@@ -638,8 +638,7 @@ export class City2D {
     this.feedback.playerHurt();
     // 断连
     this.breakCombo();
-    if (this.audio && this.audio.sfxHurt) this.audio.sfxHurt();
-    else if (this.audio) this.audio.blip(220, 0.2, 0.07, 'sawtooth');
+    this.audio.sfxHurt();
     if (this.hp <= 0) this.onDeath();
     return true;  }
   /** 连击累加（2 秒窗口） */
@@ -663,8 +662,7 @@ export class City2D {
     this.player.vy = -180;
     this.player.ground = false;
     this.feedback.slowmo(FEEL.SLOWMO_DEATH[0], FEEL.SLOWMO_DEATH[1]);
-    if (this.audio && this.audio.sfxDeath) this.audio.sfxDeath();
-    else if (this.audio) this.audio.blip(140, 0.9, 0.08, 'sawtooth');
+    this.audio.sfxDeath();
   }
 
   /** 每帧的死亡推进（由 update 调用） */

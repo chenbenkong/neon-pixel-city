@@ -165,18 +165,9 @@ export class PlayerCombat {
     return 1;
   }
 
-  // ---- 音色（T05 会把这里换成独立音色；本批次先走已有的 blip 占位）----
-  _playSwing() {
-    if (this.audio && this.audio.sfxSwing) this.audio.sfxSwing();
-    else if (this.audio) this.audio.blip(760, 0.07, 0.05, 'triangle');
-  }
-  _playHit() {
-    if (this.audio && this.audio.sfxHit) this.audio.sfxHit(false);
-    else if (this.audio) this.audio.blip(880, 0.06, 0.06, 'square');
-  }
-  _playKill() {
-    if (this.audio && this.audio.sfxKill) this.audio.sfxKill();
-    else if (this.audio) this.audio.blip(180, 0.16, 0.07, 'sawtooth');
-  }
+  // ---- 音色：T05 已接入独立战斗音色，此处不再有 blip 兜底（P0-11 判据 1）----
+  _playSwing() { this.audio.sfxSwing(); }
+  _playHit() { this.audio.sfxHit(false); }
+  _playKill() { this.audio.sfxKill(); }
 }
 

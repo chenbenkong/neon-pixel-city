@@ -708,26 +708,36 @@ gs.on('enter:PLAYING', function () {
   if (city2d) { city2d.waves.thaw(); }
   // 恢复累积分数（历史成绩，不清）
   if (audio.setMusicDuck) audio.setMusicDuck(AUDIO_BASE, 0.1);
+  // 环境层跟着状态走：战斗中的城市低鸣更响，菜单/暂停更轻（P0-11 判据 6）
+  audio.setAmbienceFor(gs.mode === '3d' ? 'menu' : 'playing', 1);
+  audio.setRain(0.06);
 });
 gs.on('enter:PAUSED', function () {
   showPanel('pausePanel');
   if (city2d) city2d.waves.freeze();
   if (audio.setMusicDuck) audio.setMusicDuck(DUCK_MENU, 0.1);
+  audio.setAmbienceFor('paused', 1);
+  audio.setRain(0.02);
   fillPauseSummary();
 });
 gs.on('exit:PAUSED', function () {
   showPanel('none');
   if (city2d) city2d.waves.thaw();
   if (audio.setMusicDuck) audio.setMusicDuck(AUDIO_BASE, 0.1);
+  audio.setAmbienceFor('playing', 1);
+  audio.setRain(0.06);
 });
 gs.on('enter:RESULT', function (payload) {
   showPanel('resultPanel');
   if (city2d) { city2d.waves.freeze(); city2d.enemies.reset(); }
   if (audio.setMusicDuck) audio.setMusicDuck(DUCK_MENU, 0.13);
+  audio.setAmbienceFor('result', 1);
+  audio.setRain(0.015);
   document.body.classList.toggle('dying', !(payload && payload.win));
 });
 gs.on('enter:MENU', function () {
   showPanel('menuPanel');
+  audio.setAmbienceFor('menu', 1);
   if (audio.setRain) audio.setRain(0.07);
 });
 // 2D/3D 转场期间冻结波次计时（不惩罚玩家）

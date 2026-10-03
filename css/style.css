@@ -425,3 +425,9 @@ body.touch #combatHud .st i { display: none; }
   font-family: var(--vt); font-size: 10px; color: var(--cyan);
   background: rgba(41,240,255,.09); border: 1px solid rgba(41,240,255,.28);
 }
+
+/* P5：天气并入左上信息组（原 hud-tc 只剩这一个标签，不值得单占一个常驻组） */
+.hud-tl .wx {
+  margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,.1);
+  font-family: var(--vt); font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,.5);
+}

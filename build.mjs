@@ -212,6 +212,16 @@ else ok('无裸布尔 busy');
 if (/\bentered\s*=/.test(mainSrc)) bad('js/main.js 复活了裸布尔 entered（应改用 gs.is）');
 else ok('无裸布尔 entered 赋值');
 
+// 7i-0. 战斗文件不得残留 blip() 占位音色（P0-11 判据 1）
+// blip() 是 UI/环境用的通用方波，战斗必须走各自的独立音色；
+// 留着兜底分支既违反判据，也会让人以为"战斗音色还没接"。
+{
+  const files = ['combat.js', 'enemy.js', 'waves.js', 'city2d.js'];
+  const hits = files.filter((f) => /\bblip\(/.test(readFileSync(join(HERE, 'js', f), 'utf8')));
+  if (hits.length) bad('战斗文件残留 blip() 占位音色：' + hits.join(', '));
+  else ok('战斗文件无 blip() 残留（4 个文件）');
+}
+
 // 7i. 顿帧冻结期的 dt=0 只能来自 Feedback.frozen（防穿透的单一入口）
 const feedbackSrc = readFileSync(join(HERE, 'js', 'feedback.js'), 'utf8');
 if (!/frozen\s*\(\s*rawDt\s*\)/.test(feedbackSrc)) bad('js/feedback.js 缺少 frozen(rawDt) 入口');
