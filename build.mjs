@@ -110,12 +110,17 @@ esbuild([
 
 // ---------------------------------------------------------------- 步骤 5：esbuild 打包 main → app.js
 step(5, 'esbuild 打包 main（IIFE / 压缩 / es2019）');
+// dpr 上限可配：默认取 config.js 的 DEFAULT_DPR_CAP；`NEON_DPR_CAP=2 node build.mjs`
+// 可临时构建出 dpr 上限 2.0 的版本，用于「改造前后同场景截图对比」实验（见 qa/batch1-shot.mjs）。
+const dprCap = process.env.NEON_DPR_CAP ? Number(process.env.NEON_DPR_CAP) : null;
+if (dprCap !== null) console.log(`  （构建期覆盖 NEON_DPR_CAP = ${dprCap}）`);
 esbuild([
   join(BUILD, 'js', 'main.js'),
   '--bundle',
   '--format=iife',
   '--minify',
   '--target=es2019',
+  ...(dprCap === null ? [] : [`--define:NEON_DPR_CAP=${dprCap}`]),
   `--outfile=${join(BUILD, 'app.js')}`,
   '--log-level=warning',
 ]);
@@ -126,9 +131,15 @@ step(6, '内联主程序进 index.html');
 let html = readFileSync(SRC_HTML, 'utf8');
 const TAG = '<script type="module" src="js/main.js"></script>';
 if (!html.includes(TAG)) { bad('源 html 中未找到 module script 标签，内联失配'); process.exit(1); }
-// 关键转义：内联脚本里不能出现 </script，否则会提前闭合标签
+// 关键转义 1：内联脚本里不能出现 </script，否则会提前闭合标签
 const inlined = `<script>${app.replace(/<\/script/g, '<\\/script')}</script>`;
-html = html.replace(TAG, inlined);
+// 关键转义 2：必须用替换函数而不是替换字符串。
+// String.prototype.replace 的字符串替换会解释 $& / $` / $' / $$ 等特殊模式，
+// 而 esbuild 压缩后的产物里天然会出现 "$&&"（某个变量被压缩命名为 $，后面跟着 &&），
+// 于是 $& 会被展开成「被匹配的 TAG」，把整段 <script type="module" src="js/main.js"></script>
+// 注入进 bundle 中间 —— 产物里凭空多出 3 处 module script 标签，且代码被静默改写。
+// 这是一个会随机命中的地雷（取决于压缩器的变量命名分配），用替换函数彻底规避。
+html = html.replace(TAG, () => inlined);
 writeFileSync(join(HERE, 'index.html'), html, 'utf8');
 ok(`index.html 已内联主程序（${(html.length / 1024).toFixed(1)} KB）`);
 
@@ -137,8 +148,12 @@ step(7, '产物自检');
 const distJs = readFileSync(join(HERE, 'dist', 'city3d.js'), 'utf8');
 
 // 7a. index.html 不得再引用 module script
-if (html.includes('type="module" src=')) bad('index.html 仍残留 type="module" src=');
+// 计数而非布尔判断：历史上出现过「产物中间凭空多出 3 处 module script 标签」的静默污染
+if (html.includes('type="module" src=')) bad('index.html 仍残留 type="module" src=（可能是内联替换污染）');
 else ok('index.html 无 type="module" src=');
+// 7a-2. 主程序源码里不得出现 HTML 结束标签（会被浏览器提前闭合内联脚本）
+if (/<\/script/i.test(app)) bad('主程序含 </script 字面量，会提前闭合内联脚本标签');
+else ok('主程序无 </script 字面量');
 
 // 7b. 主程序不得内联进 three（WebGLRenderer 只允许出现在 dist/city3d.js）
 if (app.includes('WebGLRenderer')) bad('主程序被内联进了 three（WebGLRenderer 命中），动态 import 隔离失效');
@@ -164,6 +179,26 @@ else ok('dist/city3d.js 无裸模块名残留');
 // 注意排除 minify 误报：三元表达式 `o ? 0.05 : x` 会被压缩成 `o?.05:x`，`?.` 后跟数字不是可选链
 if (/\?\.(?![0-9])/.test(app) || /\?\?/.test(app)) bad('主程序残留可选链/空值合并');
 else ok('主程序无可选链/空值合并残留');
+
+// 7g. 零降级铁律：主程序不得残留任何静默降级链路
+// 背景：项目要求「零降级」，但历史上存在一条 perfMonitor 护栏，会在帧率低时静默把
+// 场景实体砍到 40% 并弹出「性能模式 · 场景实体已精简」这种正面措辞的 toast ——
+// 玩家不知道自己看到的是被削减过的画面。这条自检把承诺变成铁律。
+//
+// 关键：必须扫**源码**而不是产物。实测踩过的坑：只查 app（压缩产物）时，
+// esbuild 的 minifier 会把未被调用的 perfMonitor 函数整个摇掉（tree shaking），
+// 于是「重新引入降级护栏」这种最该拦住的情况反而检查不出来 ——
+// 实测注入一个未被调用的 perfMonitor 后，产物自检依然全绿。查源码才拦得住。
+const mainSrc = readFileSync(join(HERE, 'js', 'main.js'), 'utf8');
+const city2dSrc = readFileSync(join(HERE, 'js', 'city2d.js'), 'utf8');
+if (/perfMonitor/.test(mainSrc)) bad('js/main.js 含静默降级 perfMonitor（违反零降级铁律）');
+else ok('js/main.js 无静默降级 perfMonitor');
+// entityScale 同理。注意 city3d.js 里的 setEntityScale 方法定义是允许保留的死方法
+// （死方法优于死代码清理，见系统设计 §6.4），只查 main 与 city2d 两个文件。
+if (/entityScale/.test(mainSrc) || /entityScale/.test(city2dSrc)) bad('主程序含 entityScale 实体缩放（违反零降级铁律）');
+else ok('主程序无实体缩放链路');
+if (/性能模式 · 场景实体已精简/.test(mainSrc)) bad('js/main.js 含静默降级提示文案「性能模式 · 场景实体已精简」');
+else ok('无静默降级提示文案');
 
 // ---------------------------------------------------------------- 收尾
 try {

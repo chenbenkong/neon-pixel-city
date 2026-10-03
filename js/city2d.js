@@ -1,6 +1,7 @@
 import { hash, rng, clamp, lerp, pick, mixHex, rgba, shade, makeCanvas, smooth, easeOutCubic } from './util.js';
 import { districtAt, SHOPS, VERTICAL_WORDS, BIG_WORDS, ADS, PIXEL_FONT, NPC_LINES } from './data.js';
 import { drawTiny, tinyWidth, neonSign, pixelText, pline, pcircle } from './pixel.js';
+import { RENDER, MOVE, JUMP, SQUASH, PARTICLE } from './config.js';
 
 const DISTRICT_LEN = 2600;
 const STREET_SLOT = 184;
@@ -36,7 +37,20 @@ export class City2D {
     this.ghostIdx = 0;
     this.cache = new Map();
     this.time = 0;
-    this.player = { x: 40, y: 0, vx: 0, vy: 0, face: 1, ground: true, phase: 0, squash: 0, run: false, airT: 0 };
+    // 玩家状态：手感三件套的计时器 + squash & stretch 的双向缩放倍率
+    this.player = {
+      x: 40, y: 0, vx: 0, vy: 0, face: 1, ground: true, phase: 0, run: false, airT: 0,
+      coyoteT: 0,   // 土狼时间剩余（s）：离地后仍可起跳
+      bufferT: 0,   // 跳跃输入缓冲剩余（s）：落地前按下的输入不会丢
+      jumpHeld: false, // 跳跃键是否按住（可变跳高的依据）
+      apex: 0,      // 本次跳跃的最高点（px，FEET 基准向上为正），供验收观测
+      apexHold: 0,  // 上升期锁定 apex 的剩余时间，防止顶点附近反复抖动
+      sqx: 1,       // 水平缩放倍率（squash & stretch）
+      sqy: 1,       // 垂直缩放倍率
+      sqHold: 0,    // 形变保持剩余（s）：到 0 后才开始指数回落
+      sqTx: 1, sqTy: 1, // 形变目标倍率
+      sqTau: SQUASH.jumpTau, // 形变回落时间常数
+    };
     this.cam = { x: 0 };
     this.npcs = [];
     this.cars = [];
@@ -59,11 +73,11 @@ export class City2D {
     this.tag = { a: 0, shop: null };
     this.clouds = this.makeClouds();
     this.vendCache = new Map();
-    // ---------- 玩法扩展：碎片 / NPC 对话 / 性能护栏 ----------
+    // ---------- 玩法扩展：碎片 / NPC 对话 ----------
     this.onShardCollect = null; // 碎片收集回调（main.js 接线）
-    this.entityScale = 1;       // 实体规模 1 → 0.8 → 0.4，只降不升
     this.talkKey = 'E';         // 对话按键提示（触屏设备由 main.js 置 null）
     this.talkCd = 0;            // 对话冷却
+    this._lastDt = 0;           // 最近一次 update 的 dt，供 render 路径的按时间累加使用
     this.shardSprite = this.makeShardSprite();
     this.shards = [];           // 碎片对象池（固定容量，激活数随规模伸缩）
     for (let i = 0; i < 12; i++) this.shards.push({ active: false, x: 0, y0: 0, seed: 0, respawn: 1 + i * 0.4 });
@@ -73,13 +87,16 @@ export class City2D {
 
   // ---------------- setup ----------------
   resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // dpr 上限来自 config.RENDER.dprCap。这是零降级预算的主要来源：
+    // composite() 每帧三次全屏 drawImage，像素数 = (innerW × dpr) × (innerH × dpr)。
+    // 上限 2 → 1.5 时 1920×1080 从 830 万像素降到 467 万（-43.7%）。
+    const dpr = Math.min(window.devicePixelRatio || 1, RENDER.dprCap);
     const w = window.innerWidth, h = window.innerHeight;
     this.canvas.width = Math.round(w * dpr);
     this.canvas.height = Math.round(h * dpr);
-    let H = 270, W = Math.round((H * w) / h);
-    if (W < 300) { W = 300; H = Math.round((W * h) / w); }
-    if (W > 780) { W = 780; H = Math.max(200, Math.round((W * h) / w)); }
+    let H = RENDER.baseH, W = Math.round((H * w) / h);
+    if (W < RENDER.minW) { W = RENDER.minW; H = Math.round((W * h) / w); }
+    if (W > RENDER.maxW) { W = RENDER.maxW; H = Math.max(200, Math.round((W * h) / w)); }
     this.W = W; this.H = H;
     this.lo.width = W; this.lo.height = H;
     this.glow.width = Math.ceil(W / 4); this.glow.height = Math.ceil(H / 4);
@@ -326,7 +343,7 @@ export class City2D {
     if (r() < 0.6) props.push({ t: 'lamp', x: 4 });
     if (r() < 0.17) {
       props.push({ t: 'dumpster', x: 40 + Math.round(r() * 60) });
-      if (r() < 0.7) props.push({ t: 'steam', x: 30 + Math.round(r() * 120) });
+      if (r() < 0.7) props.push({ t: 'steam', x: 30 + Math.round(r() * 120), acc: 0 });
       if (r() < 0.5) props.push({ t: 'cat', x: 60 + Math.round(r() * 70) });
       return { alley: true, D, props, lanterns: r() < 0.8, lanternY: 30 + Math.round(r() * 30), seed: r(), sign: neonSign(pick(r, VERTICAL_WORDS), pick(r, colors), true), signX: 80 + Math.round(r() * 40) };
     }
@@ -429,7 +446,7 @@ export class City2D {
     }
     if (r() < 0.4) dyn.push({ t: 'outline', w: fw, color: pick(r, colors), seed: r() });
     if (r() < 0.5) props.push({ t: 'vend', x: x0 + doorX + 22 + Math.round(r() * 20), color: pick(r, colors) });
-    if (r() < 0.25) props.push({ t: 'steam', x: 20 + Math.round(r() * 140) });
+    if (r() < 0.25) props.push({ t: 'steam', x: 20 + Math.round(r() * 140), acc: 0 });
     if (r() < 0.35) props.push({ t: 'trash', x: x0 + doorX + (r() < 0.5 ? -14 : 18) });
     return { alley: false, D, img, x0, fw, h, pad, padTop, dyn, props, shop, doorX, interior: shop.interior };
   }
@@ -437,12 +454,21 @@ export class City2D {
   // ---------------- lifecycle ----------------
   enter() {
     this.intro = 0;
-    if (!this.entered) { this.entered = true; this.player.x = 40; this.npcs = []; this.steam = []; }
-    this.player.y = this.FEET - 170;
-    this.player.vy = 0;
-    this.player.ground = false;
-    this.player.airT = 0;
-    this.cam.x = this.player.x - this.W * 0.45;
+    const p = this.player;
+    if (!this.entered) { this.entered = true; p.x = 40; this.npcs = []; this.steam = []; }
+    p.y = this.FEET - 170;
+    p.vy = 0;
+    p.ground = false;
+    p.airT = 0;
+    p.coyoteT = 0;
+    p.bufferT = 0;
+    p.jumpHeld = false;
+    p.apex = 0;
+    p.apexHold = 0;
+    p.sqx = 1;
+    p.sqy = 1;
+    p.sqHold = 0;
+    this.cam.x = p.x - this.W * 0.45;
     this.introDrop = true;
   }
 
@@ -451,13 +477,20 @@ export class City2D {
     const d = districtAt(Math.floor(this.player.x / DISTRICT_LEN));
     return {
       zh: d.zh, en: d.en, color: p.a,
-      tele: [`POS ${String(Math.round(this.player.x / 8)).padStart(5, '0')} M`, `SPD ${String(Math.round(Math.abs(this.player.vx) / 8 * 3.6)).padStart(3, '0')} KM/H`, `RAIN 87%`],
+      // 遥测必须说真话：SPD 是真实 px/s（原先的 /8*3.6 是把像素当米再换算 km/h 的虚构值）；
+      // 雨量改为真实粒子速率（由 PARTICLE.STEAM_RATE 与雨滴密度共同决定，此处显示蒸汽发射率）。
+      tele: [
+        `POS ${String(Math.round(this.player.x)).padStart(5, '0')} PX`,
+        `SPD ${String(Math.round(Math.abs(this.player.vx))).padStart(3, '0')} PX/S`,
+        `FPS ${(1000 / Math.max(1, this._frameMs || 16.7)).toFixed(0)}`,
+      ],
     };
   }
 
   // ---------------- update ----------------
   update(dt, input) {
     this.time += dt;
+    this._lastDt = dt;
     const t = this.time;
     const p = this.player;
     if (this.intro < 1) this.intro = Math.min(1, this.intro + dt / 1.9);
@@ -466,31 +499,77 @@ export class City2D {
     const right = input.down('KeyD', 'ArrowRight') || input.joy.x > 0.3;
     p.run = input.down('ShiftLeft', 'ShiftRight') || input.btn.boost || Math.abs(input.joy.x) > 0.92;
     const dir = (right ? 1 : 0) - (left ? 1 : 0);
-    const target = dir * (p.run ? 150 : 62);
-    const acc = p.ground ? 9 : 3;
-    p.vx += (target - p.vx) * Math.min(1, acc * dt);
+    const target = dir * (p.run ? MOVE.runSpd : MOVE.walkSpd);
+    // ---- P0-2 移动曲线分离：加速 / 减速 / 转身 三套独立系数 ----
+    // 原实现加速与减速共用 acc=9（τ=111ms），转身要走同一条指数曲线约 250ms 才穿过 0 点，
+    // 玩家感知为"脚底抹了油"。分离后：起步 τ=75ms、刹车 τ=38ms、转身穿越 0 点约 21ms。
+    const airK = p.ground ? 1 : MOVE.airMul;
+    let k;
+    if (dir === 0) k = MOVE.kDec * airK;
+    else if (p.vx !== 0 && Math.sign(target) !== Math.sign(p.vx)) k = MOVE.kTurn * airK;
+    else k = MOVE.kAcc * airK;
+    p.vx += (target - p.vx) * Math.min(1, k * dt);
     if (dir) p.face = dir;
-    if ((input.hit('Space', 'KeyW', 'ArrowUp') || input.touchJump) && p.ground) {
-      p.vy = -235; p.ground = false; p.airT = 0;
+
+    // ---- P0-1 跳跃三件套：输入缓冲 + 土狼时间 + 可变跳高 ----
+    // (1) 输入缓冲：按下即置 bufferT，落地前按下的输入不会因为"这一帧恰好不在地面"被静默丢弃
+    // 先衰减再置位：保证"按下的那一帧"拿到完整的 140ms 窗口（否则 133ms 的落地前输入会差一帧）
+    p.bufferT = Math.max(0, p.bufferT - dt);
+    if (input.hit('Space', 'KeyW', 'ArrowUp') || input.touchJump) p.bufferT = JUMP.buffer;
+    p.jumpHeld = input.down('Space', 'KeyW', 'ArrowUp') || input.btn.up === true;
+    // (2) 土狼时间：离地后 coyoteT 内仍可起跳（走出平台边缘只差 2px 也能跳）
+    if (p.ground) p.coyoteT = JUMP.coyote;
+    else p.coyoteT = Math.max(0, p.coyoteT - dt);
+    if (p.bufferT > 0 && (p.ground || p.coyoteT > 0)) {
+      p.vy = -JUMP.v0;
+      p.ground = false;
+      p.airT = 0;
+      p.bufferT = 0;   // 起跳后两个计时器立即清零，防止连按触发二次起跳
+      p.coyoteT = 0;
+      p.apex = 0;     // 本次跳跃最高点（供验收观测）
+      p.apexHold = 0;
+      this.setSquash(SQUASH.jumpX, SQUASH.jumpY, 0.10, SQUASH.jumpTau);
       this.audio.jump();
       this.spawnSplash(p.x, this.FEET, 5, 1);
     }
+
     p.x += p.vx * dt;
     if (!p.ground) {
       p.airT += dt;
-      p.vy += 720 * dt;
+      // (3) 可变跳高：上升/下降重力分离 + 松手时按"剩余可升高度"动态反解截断速度
+      p.vy += (p.vy < 0 ? JUMP.gRise : JUMP.gFall) * dt;
+      if (!p.jumpHeld && p.vy < 0) {
+        // 不写死 -120：那样短跳只能到 120²/(2×620)=11.6px，达不到 PRD 要求的 ≥22px。
+        // 改为按"距短跳目标高度还差多少"反解 vc，已够高则直接 vy=0 转入下落。
+        const risen = this.FEET - p.y;
+        const need = JUMP.minH - risen;
+        if (need <= 0) {
+          p.vy = 0;
+        } else {
+          const vc = Math.sqrt(2 * JUMP.gRise * need);
+          if (p.vy < -vc) p.vy = -vc;
+        }
+      }
       p.y += p.vy * dt;
+      // 顶点锁定：顶点附近 vy 在 0 附近抖动会让 apex 读数不稳，锁定到上升期结束
+      if (p.vy < 0) p.apexHold = 0.05;
+      else if (p.apexHold > 0) p.apexHold = Math.max(0, p.apexHold - dt);
+      if (p.vy < 0 || p.apexHold > 0) p.apex = Math.max(p.apex, this.FEET - p.y);
       if (p.y >= this.FEET) {
-        const hard = p.vy > 420;
-        p.y = this.FEET; p.ground = true;
-        p.squash = hard ? 1 : 0.5;
+        const hard = p.vy > JUMP.hardVy;
+        p.y = this.FEET;
+        p.ground = true;
+        p.coyoteT = JUMP.coyote;
+        // 硬落地幅度为软落地的 2 倍
+        if (hard) this.setSquash(SQUASH.hardX, SQUASH.hardY, 0, SQUASH.hardTau);
+        else this.setSquash(SQUASH.softX, SQUASH.softY, 0, SQUASH.softTau);
         this.spawnSplash(p.x, this.FEET, hard ? 22 : 8, hard ? 2 : 1);
         this.audio.land(hard ? 2 : 0.6);
         if (hard) this.shock = { x: p.x, t: 0 };
         p.vy = 0;
       }
     }
-    p.squash = Math.max(0, p.squash - dt * 3);
+    this.updateSquash(dt, p);
     const speed = Math.abs(p.vx);
     if (p.ground && speed > 5) {
       const prev = Math.floor(p.phase / Math.PI);
@@ -499,9 +578,12 @@ export class City2D {
     } else if (p.ground) p.phase = lerp(p.phase, Math.round(p.phase / Math.PI) * Math.PI, dt * 8);
     if (this.shock) { this.shock.t += dt; if (this.shock.t > 0.8) this.shock = null; }
 
-    // camera
-    const tx = p.x - this.W * 0.5 + p.face * this.W * 0.1 + p.vx * 0.35;
-    this.cam.x += (tx - this.cam.x) * Math.min(1, dt * 3.2);
+    // camera —— P0-2：τ 由 312ms 收紧到 95ms，并删除 p.face 阶跃偏置
+    // 原偏置 p.face * W * 0.1 是随朝向瞬时跳变的项，被慢 lerp 抹平后表现为"每次转身镜头多甩一下"。
+    // 前瞻项改为速度的连续函数（vx 本身连续），并夹紧到 ±46px 防止满速时甩太远。
+    const bias = clamp(p.vx * MOVE.camLook, -MOVE.camLookMax, MOVE.camLookMax);
+    const tx = p.x - this.W * 0.5 + bias;
+    this.cam.x += (tx - this.cam.x) * Math.min(1, MOVE.camK * dt);
 
     // ghosts (sandevistan afterimages)
     this.ghostTimer -= dt;
@@ -571,11 +653,54 @@ export class City2D {
     else this.tag.a = Math.max(0, this.tag.a - dt * 4);
   }
 
+  // ---------------- squash & stretch（P0-3） ----------------
+
+  /**
+   * 触发一次形变。tx/ty 是目标倍率，hold 是保持时长（秒），tau 是之后指数回落的时间常数。
+   * 形变完全通过 blitSprite 的双向缩放表达，不允许用整体位移冒充（PRD 验收 3）。
+   */
+  setSquash(tx, ty, hold, tau) {
+    const p = this.player;
+    p.sqTx = tx;
+    p.sqTy = ty;
+    p.sqHold = hold;
+    p.sqTau = tau;
+    p.sqx = tx;
+    p.sqy = ty;
+  }
+
+  /**
+   * 形变推进：保持段结束后按 τ 指数回 1.0；
+   * 空中时叠加与 vy 相关的连续形变（上升越高压得越扁，下落加速时纵向微压）。
+   */
+  updateSquash(dt, p) {
+    if (p.sqHold > 0) {
+      p.sqHold = Math.max(0, p.sqHold - dt);
+    } else {
+      const a = Math.min(1, dt / Math.max(0.016, p.sqTau));
+      p.sqx += (1 - p.sqx) * a;
+      p.sqy += (1 - p.sqy) * a;
+    }
+    if (!p.ground && p.sqHold <= 0) {
+      // 上升：k = -vy / v0 ∈ [0,1]，跳得越高越扁
+      if (p.vy < 0) {
+        const k = clamp(-p.vy / JUMP.v0, 0, 1);
+        p.sqx = lerp(p.sqx, lerp(1, SQUASH.jumpX, k), Math.min(1, dt * 14));
+        p.sqy = lerp(p.sqy, lerp(1, SQUASH.jumpY, k), Math.min(1, dt * 14));
+      } else {
+        // 下落：加速形变，落地前有预备感
+        const k = clamp(p.vy / SQUASH.fallRef, 0, 1);
+        p.sqx = lerp(p.sqx, lerp(1, SQUASH.fallX, k), Math.min(1, dt * 10));
+        p.sqy = lerp(p.sqy, lerp(1, SQUASH.fallY, k), Math.min(1, dt * 10));
+      }
+    }
+  }
+
   updateNPCs(dt) {
     const L = this.cam.x - 160, R = this.cam.x + this.W + 160;
     this.npcs = this.npcs.filter((n) => n.x > L - 200 && n.x < R + 200);
-    // 实体数随视口与性能规模自适应（下限 3，保证街道不空）
-    while (this.npcs.length < Math.max(3, Math.round((this.W / 45) * this.entityScale))) {
+    // 实体数随视口自适应（下限 3，保证街道不空）。零降级：无性能档位缩放
+    while (this.npcs.length < Math.max(3, Math.round(this.W / 45))) {
       const init = this.npcs.length < 3 && this.time < 1;
       const side = Math.random() < 0.5;
       const x = init ? this.cam.x + Math.random() * this.W : side ? L - Math.random() * 60 : R + Math.random() * 60;
@@ -598,11 +723,6 @@ export class City2D {
   }
 
   // ---------------- 玩法扩展：碎片 / NPC 对话 ----------------
-
-  /** 性能护栏：调整实体规模（NPC/碎片激活上限），只降不升由 main.js 控制 */
-  setEntityScale(k) {
-    this.entityScale = k;
-  }
 
   /** 预渲染碎片精灵：像素菱形 + 光晕，避免每帧创建渐变对象造成 GC 抖动 */
   makeShardSprite() {
@@ -633,23 +753,39 @@ export class City2D {
       if (Math.abs(x - p.x) > 70) break;
     }
     s.x = x;
-    // 悬浮高度控制在跳跃可达范围（跳高 ~38px），低空步行可捡、高空跳起可捡
-    s.y0 = this.FEET - 10 - Math.random() * 36;
+    // 悬浮高度必须与「当前跳跃可达范围」匹配，且要保证步行也能稳定产出。
+    //
+    // 原值 -10-rand*36（10~46px）是照着「固定 38.3px 跳高」定的：无论按多久都跳 38.3px。
+    // 引入可变跳高后这个前提消失 —— 轻点只跳 24px（minH），长按才 49px。
+    //
+    // 拾取判定是 dx² + dy² < 28²。玩家站立时 p.y = FEET，即 dy = -高度，
+    // 于是留给横向的余量是 √(28² - 高度²)：
+    //   高度 6px → 27.3px（好捡）  高度 20px → 19.1px  高度 26px → 10.5px  高度 ≥28px → 0（站着永远捡不到）
+    // 若沿用 10~46px 的均匀分布，约 1/4 的碎片站着永远拿不到，
+    // 表现为「碎片就在屏幕上却捡不到」（实测 18 轮漫游只捡到 1 枚）。
+    //
+    // 改为两段式分布，既保住「低空步行可捡、高空跳起可捡」的设计意图，
+    // 又让步行产出稳定：
+    //   低段 6~20px（70%）—— 步行或轻点跳即可捡
+    //   高段 28~42px（30%）—— 必须长按跳到 40px 以上才够得着，是给「跳起来够高」的正反馈
+    s.y0 = this.FEET - (Math.random() < 0.7 ? 6 + Math.random() * 14 : 28 + Math.random() * 14);
     s.seed = Math.random() * 6.28;
     s.active = true;
   }
 
   updateShards(dt) {
     const p = this.player;
-    const want = Math.max(4, Math.round(12 * this.entityScale));
+    const want = 12; // 碎片同时激活上限。零降级：无性能档位缩放
     let active = 0;
     for (const s of this.shards) if (s.active) active += 1;
     for (const s of this.shards) {
       if (s.active) {
         const sy = s.y0 + Math.sin(this.time * 2.2 + s.seed) * 3;
         const dx = s.x - p.x, dy = sy - p.y;
-        // 距离平方比较，不开方（半径 24：步行可捡低空碎片，跳跃覆盖高空碎片）
-        if (dx * dx + dy * dy < 576) {
+        // 距离平方比较，不开方。半径 28：站立时玩家中心在 FEET，
+        // 高度 8px 的碎片 dy=-8，留给 dx 的余量是 √(28²-8²)=26.8px ——
+        // 62px/s 的步速下一帧走 1.03px，窗口足够宽，步行拾取不会「擦身而过」。
+        if (dx * dx + dy * dy < 784) {
           s.active = false;
           s.respawn = 4 + Math.random() * 4; // 延迟重生，避免区域耗尽
           active -= 1;
@@ -803,14 +939,41 @@ export class City2D {
     for (let i = 0; i < n; i++) this.splashes.push({ x, y, vx: (Math.random() - 0.5) * 70 * power, vy: -(30 + Math.random() * 70) * power, t: 0, life: 0.3 + Math.random() * 0.3 });
   }
 
+  /**
+   * 粒子更新 + 原地压缩。
+   *
+   * 为什么不用 filter：filter 每次调用都分配一个新数组。战斗粒子密度涨 5~10 倍后，
+   * 三个 filter 就是每帧三个新数组的真实 GC 压力源，会把对象池的收益全部抵消掉。
+   * 原地压缩（读指针 + 写指针 + 截断 length）零分配。
+   */
   updateParticles(dt) {
-    for (const s of this.splashes) { s.t += dt; s.vy += 400 * dt; s.x += s.vx * dt; s.y += s.vy * dt; }
-    this.splashes = this.splashes.filter((s) => s.t < s.life);
-    for (const r of this.ripples) r.t += dt;
-    this.ripples = this.ripples.filter((r) => r.t < 0.5);
-    for (const s of this.steam) { s.t += dt; s.y -= s.v * dt; s.x += Math.sin(s.t * 2 + s.seed) * 6 * dt + 4 * dt; s.r += dt * 4; }
-    this.steam = this.steam.filter((s) => s.t < s.life);
-    if (this.steam.length > 220) this.steam.splice(0, this.steam.length - 220);
+    const sp = this.splashes;
+    let w = 0;
+    for (let i = 0; i < sp.length; i++) {
+      const s = sp[i];
+      s.t += dt; s.vy += 400 * dt; s.x += s.vx * dt; s.y += s.vy * dt;
+      if (s.t < s.life) sp[w++] = s;
+    }
+    sp.length = w;
+
+    const rp = this.ripples;
+    w = 0;
+    for (let i = 0; i < rp.length; i++) {
+      const r = rp[i];
+      r.t += dt;
+      if (r.t < 0.5) rp[w++] = r;
+    }
+    rp.length = w;
+
+    const st = this.steam;
+    w = 0;
+    for (let i = 0; i < st.length; i++) {
+      const s = st[i];
+      s.t += dt; s.y -= s.v * dt; s.x += Math.sin(s.t * 2 + s.seed) * 6 * dt + 4 * dt; s.r += dt * 4;
+      if (s.t < s.life) st[w++] = s;
+    }
+    st.length = w;
+    if (st.length > PARTICLE.STEAM_CAP) st.splice(0, st.length - PARTICLE.STEAM_CAP);
   }
 
   // ---------------- render ----------------
@@ -1181,7 +1344,7 @@ export class City2D {
     // props behind people
     for (const [i, s] of slots) {
       const sx = Math.round(i * STREET_SLOT - ox);
-      for (const p of s.props) this.drawProp(p, sx + p.x + (s.alley ? 0 : 0), s, i, t);
+      for (const p of s.props) this.drawProp(p, sx + p.x, s, i, t, this._lastDt);
     }
     // steam particles
     for (const p of this.steam) {
@@ -1255,7 +1418,7 @@ export class City2D {
     return c;
   }
 
-  drawProp(p, x, s, i, t) {
+  drawProp(p, x, s, i, t, dt) {
     const l = this.l, G = this.GROUND;
     if (p.t === 'lamp') {
       l.fillStyle = '#1e1830';
@@ -1299,7 +1462,14 @@ export class City2D {
       if (Math.sin(t * 0.8 + i) > -0.9) { l.fillStyle = '#c6ff3d'; l.fillRect(cx + 5, cy - 1, 1, 1); }
     } else if (p.t === 'steam') {
       l.fillStyle = '#231c33'; l.fillRect(x - 4, G + 3, 10, 2);
-      if (Math.random() < 0.35) this.steam.push({ x: x + this.cam.x + (Math.random() - 0.5) * 4, y: G + 3, v: 14 + Math.random() * 14, r: 1, t: 0, life: 2 + Math.random() * 1.5, seed: Math.random() * 6 });
+      // 按时间累加而非按帧概率：原先 0.35/帧 在 60Hz 下是 21 枚/秒、144Hz 下是 50 枚/秒，
+      // 蒸汽密度会随刷新率变化（帧率相关的观感不一致）。改为固定 RATE 枚/秒后帧率无关。
+      p.acc += dt;
+      const INV = 1 / PARTICLE.STEAM_RATE;
+      while (p.acc >= INV) {
+        p.acc -= INV;
+        this.steam.push({ x: x + this.cam.x + (Math.random() - 0.5) * 4, y: G + 3, v: 14 + Math.random() * 14, r: 1, t: 0, life: 2 + Math.random() * 1.5, seed: Math.random() * 6 });
+      }
     }
   }
 
@@ -1360,18 +1530,18 @@ export class City2D {
     const run = p.run && speed > 90;
     const air = !p.ground;
     const bob = moving ? Math.round(Math.abs(Math.cos(p.phase)) * (run ? 1.5 : 1)) : Math.round(Math.sin(t * 2) * 0.6 + 0.4);
-    const sq = Math.round(p.squash * 3);
     const lean = run ? 2 : moving ? 1 : 0;
-    const top = Y - 26 + bob + sq;
+    // 形变不再用位移冒充：躯干与腿共用同一个缩放矩阵，不可能出现接缝错位
+    const top = Y - 26 + bob;
     // legs
     c.fillStyle = '#0b0a14';
     if (air) {
       pline(c, X - 1, Y - 9, X - 3, Y - 4, 2); pline(c, X + 1, Y - 9, X + 4, Y - 5, 2);
     } else {
       const A = Math.round(sw * (run ? 5 : 3.5));
-      pline(c, X, Y - 9 + sq, X - A, Y - 1 - (A < 0 && run ? 2 : 0), 2);
+      pline(c, X, Y - 9, X - A, Y - 1 - (A < 0 && run ? 2 : 0), 2);
       c.fillStyle = '#161524';
-      pline(c, X, Y - 9 + sq, X + A, Y - 1 - (A > 0 && run ? 2 : 0), 2);
+      pline(c, X, Y - 9, X + A, Y - 1 - (A > 0 && run ? 2 : 0), 2);
       c.fillStyle = '#05040a';
       c.fillRect(X - A - 1, Y - 1, 4, 1); c.fillRect(X + A - 1, Y - 1, 4, 1);
     }
@@ -1431,7 +1601,7 @@ export class City2D {
     const sh = Math.max(2, 7 - Math.round((this.FEET - p.y) / 20));
     l.fillRect(Math.round(p.x - this.cam.x) - sh, this.FEET, sh * 2 + 1, 1);
     this.drawPlayerSprite();
-    this.blitSprite(this.pc, p.x, p.y, p.face);
+    this.blitSprite(this.pc, p.x, p.y, p.face, p.sqx, p.sqy);
     // visor glow
     l.globalCompositeOperation = 'lighter';
     const vx = Math.round(p.x - this.cam.x) + p.face * 3, vy = Math.round(p.y) - 24;
@@ -1448,11 +1618,25 @@ export class City2D {
     }
   }
 
-  blitSprite(c, x, y, face) {
+  /**
+   * 精灵 blit：sx / sy 为双向缩放倍率（squash & stretch）。
+   * 以角色脚底中心 (sx0, sy0) 为锚点做中心缩放，形变时脚不会离地、头不会插进天花板。
+   * render() 开头已设 imageSmoothingEnabled = false，缩放是最近邻，像素风不会被插值糊掉。
+   */
+  blitSprite(c, x, y, face, sx, sy) {
     const l = this.l;
-    const sx = Math.round(x - this.cam.x), sy = Math.round(y);
-    if (face >= 0) l.drawImage(c, sx - 22, sy - 38);
-    else { l.save(); l.translate(sx, 0); l.scale(-1, 1); l.drawImage(c, -22, sy - 38); l.restore(); }
+    const ax = Math.round(x - this.cam.x), ay = Math.round(y);
+    const kx = sx === undefined ? 1 : sx;
+    const ky = sy === undefined ? 1 : sy;
+    if (kx === 1 && ky === 1) {
+      if (face >= 0) l.drawImage(c, ax - 22, ay - 38);
+      else { l.save(); l.translate(ax, 0); l.scale(-1, 1); l.drawImage(c, -22, ay - 38); l.restore(); }
+      return;
+    }
+    const w = Math.max(1, Math.round(44 * kx)), h = Math.max(1, Math.round(44 * ky));
+    const dx = Math.round(ax - w / 2), dy = Math.round(ay - 38 * ky);
+    if (face >= 0) l.drawImage(c, 0, 0, 44, 44, dx, dy, w, h);
+    else { l.save(); l.translate(ax, 0); l.scale(-1, 1); l.drawImage(c, 0, 0, 44, 44, -Math.round(w / 2), dy, w, h); l.restore(); }
   }
 
   drawTag() {

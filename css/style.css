@@ -118,8 +118,7 @@ body.shifting .mode-track { animation: pulse 0.25s steps(2) 4; }
 
 /* now playing */
 .np-label { font-family: var(--vt); font-size: 15px; letter-spacing: 2px; color: rgba(255, 255, 255, 0.45); }
-.np-title { margin: 4px 0 8px; font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#spectrum { display: block; width: 220px; height: 34px; image-rendering: pixelated; }
+.np-title { margin-top: 4px; font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* banner & toast */
 #banner { left: 50%; top: 24%; transform: translateX(-50%); text-align: center; pointer-events: none; opacity: 0; white-space: nowrap; }
@@ -196,15 +195,23 @@ body[data-mode='2d'] .tbtns [data-btn='down'] { display: none; }
 }
 
 /* ---------- 玩法 HUD：任务卡 / 积分板 ---------- */
+/* 贴底 18px，与 .hud-bl / .hud-tr 的贴底距离对齐。
+   原先依赖 JS 动态测量左下/右下面板高度再叠加的 CSS 变量；
+   面板已精简，变量不再有值会退化成错位的 34px，故彻底删掉变量依赖。 */
 #questCard {
   left: 18px;
-  bottom: calc(34px + var(--ctrlH, 0px));
+  bottom: 18px;
   width: 252px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.72);
   transform: translateY(30px);
   opacity: 0;
-  transition: 0.9s cubic-bezier(.2, .9, .2, 1) 0.6s;
+  /* 只过渡 transform / opacity，不写 all。
+     原因：`transition: 0.9s ... 0.6s` 的简写省略属性名时默认是 all，会把 bottom/left
+     也纳入过渡 —— 而布局属性带 0.6s 延迟才生效，导致 body.touch 的 bottom:192px
+     在切换瞬间量到的仍是旧值，任务卡会短暂压在摇杆上（自动化布局检查会误判重叠）。
+     顺带一提，过渡布局属性本身也是每帧触发布局的反模式。 */
+  transition: transform 0.9s cubic-bezier(.2, .9, .2, 1) 0.6s, opacity 0.9s cubic-bezier(.2, .9, .2, 1) 0.6s;
 }
 body.entered #questCard { transform: none; opacity: 1; }
 #questCard .ttl { font-family: var(--vt); font-size: 15px; letter-spacing: 2px; color: var(--accent); margin-bottom: 6px; }
@@ -216,13 +223,14 @@ body.entered #questCard { transform: none; opacity: 1; }
 
 #scoreBoard {
   right: 18px;
-  bottom: calc(34px + var(--brH, 0px));
+  bottom: 18px;
   display: flex;
   gap: 16px;
   padding: 9px 16px;
   transform: translateY(30px);
   opacity: 0;
-  transition: 0.9s cubic-bezier(.2, .9, .2, 1) 0.7s;
+  /* 同 #questCard：只过渡 transform / opacity，避免布局属性被延迟过渡 */
+  transition: transform 0.9s cubic-bezier(.2, .9, .2, 1) 0.7s, opacity 0.9s cubic-bezier(.2, .9, .2, 1) 0.7s;
 }
 body.entered #scoreBoard { transform: none; opacity: 1; }
 #scoreBoard .sc { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 40px; }

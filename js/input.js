@@ -93,8 +93,15 @@ export class Input {
     return false;
   }
 
-  endFrame() {
-    this.pressed.clear();
+  /**
+   * 帧末清理。
+   *
+   * keepPressed：顿帧冻结期传 true，此时不清 pressed。
+   * 原因：顿帧期间 simDt=0 但 endFrame 照常执行，玩家在 60ms 冻结期内按下的 J 会被丢弃。
+   * 不清的话，下一个非冻结帧会消费到它（input 层无需知道"什么是顿帧"，只接收一个布尔）。
+   */
+  endFrame(keepPressed) {
+    if (!keepPressed) this.pressed.clear();
     this.drag.dx = this.drag.dy = 0;
     this.wheel = 0;
     this.touchJump = false;

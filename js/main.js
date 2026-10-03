@@ -12,34 +12,54 @@ const stage = $('#stage');
 const input = new Input(stage);
 const fx = new Transition($('#fx'));
 
-// ---------- 玩法扩展：存档 / 任务 / 性能护栏 ----------
+// ---------- 玩法扩展：存档 / 任务 ----------
 const save = new Progress();
 const quest = new QuestSystem(save, {
   banner, toast, audio, refreshScore,
   getCity3d: () => city3d,
   randomDistrict: () => DISTRICTS[Math.floor(Math.random() * DISTRICTS.length)],
 });
-// 性能护栏：平均帧时长 >22ms 实体减 20%，>33ms 再减半；只降不升，避免抖动
-const perf = { acc: 0, n: 0, scale: 1, done: false };
-function applyEntityScale() {
-  if (city2d) city2d.setEntityScale(perf.scale);
-  if (city3d) city3d.setEntityScale(perf.scale);
+
+/**
+ * PerfWatch —— 只观测，不干预。
+ *
+ * 零降级铁律：本项目不再有任何"帧率低就砍实体"的静默降级链路（原性能护栏已整体删除）。
+ * 这里只保留一个环形缓冲，供自动化验收读取 avg / p95，作为"是否回退"的客观证据。
+ */
+class PerfWatch {
+  constructor(n) {
+    this.buf = new Float32Array(n);
+    this.n = n;
+    this.i = 0;
+    this.len = 0;
+  }
+  /** 入队一帧真实时长（毫秒，不 clamp —— 长卡顿必须被如实记录） */
+  sample(ms) {
+    this.buf[this.i] = ms;
+    this.i = (this.i + 1) % this.n;
+    if (this.len < this.n) this.len += 1;
+  }
+  avg() {
+    if (!this.len) return 0;
+    let s = 0;
+    for (let i = 0; i < this.len; i++) s += this.buf[i];
+    return s / this.len;
+  }
+  /** p95：复制一份排序求分位。只在自动化验收里被读取，不是每帧路径 */
+  p95() {
+    if (!this.len) return 0;
+    const a = Array.prototype.slice.call(this.buf, 0, this.len).sort((x, y) => x - y);
+    return a[Math.min(a.length - 1, Math.floor(a.length * 0.95))];
+  }
+  max() {
+    if (!this.len) return 0;
+    let m = 0;
+    for (let i = 0; i < this.len; i++) if (this.buf[i] > m) m = this.buf[i];
+    return m;
+  }
 }
-function perfMonitor(ms) {
-  if (!entered || perf.done) return;
-  perf.acc += ms;
-  perf.n += 1;
-  if (perf.n < 90) return; // 约 1.5 秒窗口
-  const avg = perf.acc / perf.n;
-  perf.acc = 0;
-  perf.n = 0;
-  if (avg > 33 && perf.scale > 0.4) perf.scale = perf.scale <= 0.8 ? 0.4 : 0.8;
-  else if (avg > 22 && perf.scale >= 1) perf.scale = 0.8;
-  else return;
-  perf.done = perf.scale <= 0.4;
-  applyEntityScale();
-  toast('性能模式 · 场景实体已精简');
-}
+const perf = new PerfWatch(120);
+
 // 积分 / 碎片 / 纪计 HUD（只在数值变化时改 DOM，由 hud() 节流器与事件驱动）
 const scoreEl = $('#scScore'), shardEl = $('#scShard'), bestEl = $('#scBest');
 let lastScore = '', lastShard = '', lastBest = '';
@@ -68,8 +88,10 @@ function onShardCollect() {
 // 轻量调试快照：供自动化验证与排障读取。getter 惰性求值，不访问则零每帧开销。
 window.__neonDebug = {
   talks: 0,
+  get city2d() { return city2d; },
   get stats() {
     var q = quest.current;
+    var p = city2d ? city2d.player : null;
     return {
       mode: mode, entered: entered,
       score: save.mem.score, shards: save.mem.shards,
@@ -78,6 +100,18 @@ window.__neonDebug = {
       achievements: Object.keys(save.mem.achievements || {}).length,
       questType: q ? q.type : null, questDone: q ? q.done : 0, questN: q ? q.n : 0,
       talks: window.__neonDebug.talks,
+      // 性能观测（只读，不参与任何降级决策）
+      perf: { avg: perf.avg(), p95: perf.p95(), max: perf.max(), frames: perf.len },
+      // 双时间轴：rawDt 真实帧时长 / lastSimDt 送进游戏逻辑的步长（顿帧期为 0）
+      rawDt: lastRawDt, lastSimDt: lastSimDt,
+      // 手感观测：跳跃三件套与移动曲线的直接证据
+      player: p ? {
+        x: p.x, y: p.y, vx: p.vx, vy: p.vy, face: p.face,
+        ground: p.ground, coyoteT: p.coyoteT, bufferT: p.bufferT,
+        jumpHeld: p.jumpHeld, apex: p.apex, apexHold: p.apexHold,
+        sqx: p.sqx, sqy: p.sqy,
+      } : null,
+      camX: city2d ? city2d.cam.x : 0,
     };
   },
 };
@@ -106,7 +140,7 @@ const LOG = [
   'MOUNTING CITY GRID  [34 x 34 BLOCKS] ...... OK',
   'SPAWNING CITIZENS · 2,048,576 ............. OK',
   'CALIBRATING NEON TUBES · 4,096 HZ ......... OK',
-  'ACID RAIN PROBABILITY ..................... 87%',
+  'ATMOSPHERE · ACID RAIN · PARTICLE-BASED .... OK',
   'SYNTHWAVE ENGINE · 94 BPM · A MINOR ....... OK',
   'DIMENSION DRIVE · 2D <-> 3D ............... ARMED',
   'LOADING VOXEL SKYLINE ..................... ',
@@ -184,7 +218,6 @@ async function boot() {
       // 玩法接线：碎片收集 / 竞速检查点（窄接口，three 对象不出 city3d）
       city3d.onShardCollect = onShardCollect;
       city3d.onRaceCheckpoint = (idx, total) => quest.onCheckpoint(idx, total);
-      city3d.setEntityScale(perf.scale);
       return city3d;
     })
     .catch((e) => { console.error(e); toast('3D 模块加载失败：你的设备可能不支持 WebGL2'); return null; });
@@ -326,16 +359,6 @@ function updateControls() {
     return `<div class="row">${keys}<span class="t">${r[r.length - 1]}</span></div>`;
   });
   $('#controls').innerHTML = `<div class="ttl">CONTROLS // 操作</div>${rows.join('')}<div class="row"><kbd>M</kbd><span class="t">音乐</span><kbd>F</kbd><span class="t">全屏</span></div>`;
-  measureHUD();
-}
-
-/** 测量左下/右下面板高度，供任务卡与积分板定位（避免遮挡） */
-function measureHUD() {
-  const c = $('#controls');
-  const br = document.querySelector('.hud-br');
-  const st = document.documentElement.style;
-  st.setProperty('--ctrlH', (c ? c.offsetHeight : 0) + 'px');
-  st.setProperty('--brH', (br ? br.offsetHeight : 0) + 'px');
 }
 
 function updateTrack(i) {
@@ -365,7 +388,6 @@ function toast(msg) {
 
 let lastDistrict = null, hudAcc = 0;
 const tele = $('#tele'), dname = $('#dname'), den = $('#den'), clock = $('#clock');
-const eq = $('#eq').getContext('2d'), spec = $('#spectrum').getContext('2d');
 const start = new Date(2077, 8, 24, 23, 47, 0).getTime();
 function hud(dt, scene) {
   hudAcc += dt;
@@ -394,48 +416,42 @@ function hud(dt, scene) {
     const p = (n) => String(n).padStart(2, '0');
     clock.textContent = `2077.09.24 · ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
   }
-  const f = audio.spectrum();
-  const muted = audio.muted || !f;
-  eq.clearRect(0, 0, 40, 22);
-  for (let i = 0; i < 6; i++) {
-    const v = muted ? 0.1 : f[2 + i * 4] / 255;
-    const h = Math.max(2, Math.round(v * 20));
-    eq.fillStyle = i % 2 ? '#29f0ff' : '#ff2bd6';
-    eq.fillRect(3 + i * 6, 21 - h, 4, h);
-  }
-  spec.clearRect(0, 0, 220, 34);
-  const n = 36;
-  for (let i = 0; i < n; i++) {
-    const v = muted ? 0.04 : Math.pow((f[i + 1] || 0) / 255, 1.4);
-    const h = Math.max(1, Math.round(v * 30 / 3) * 3);
-    for (let y = 0; y < h; y += 3) {
-      const k = y / 30;
-      spec.fillStyle = k > 0.7 ? '#ffffff' : k > 0.4 ? '#29f0ff' : '#ff2bd6';
-      spec.fillRect(i * 6, 33 - y - 2, 5, 2);
-    }
-  }
 }
 
 // ---------- loop ----------
 let last = performance.now();
+let lastRawDt = 0, lastSimDt = 0;
+/**
+ * 主循环：双时间轴。
+ *
+ * rawDt —— 真实帧时长，不 clamp。只被 perf 统计消费，长卡顿必须被如实记录
+ *          （原实现把 clamp 后的 dt 喂给统计，导致一次 200ms 卡顿被上报为 50ms，护栏对卡顿完全失明）。
+ * simDt —— clamp 后的物理步长，进游戏逻辑。上限 0.05 防长卡顿穿模，下限 0.001 防除零。
+ *
+ * T03 引入顿帧后，simDt 还要乘 Feedback 判定出的时间倍率（顿帧期为 0）。
+ * 本批次只做 rawDt / simDt 的分离，顿帧入口在 T03 接入。
+ */
 function frame(now) {
-  const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+  const rawDt = (now - last) / 1000;
   last = now;
+  const simDt = Math.min(0.05, Math.max(0.001, rawDt));
+  lastRawDt = rawDt;
+  lastSimDt = simDt;
+  perf.sample(rawDt * 1000);
   const scene = mode === '2d' ? city2d : city3d;
   const inp = !entered ? (mode === '2d' ? DEMO : IDLE) : busy ? IDLE : input;
   if (scene) {
-    scene.update(dt, inp);
+    scene.update(simDt, inp);
     scene.render();
   }
-  fx.update(dt);
-  quest.update(dt); // 竞速计时等（内部自行判断空转，代价极低）
-  hud(dt, scene);
+  fx.update(simDt);
+  quest.update(simDt); // 竞速计时等（内部自行判断空转，代价极低）
+  hud(simDt, scene);
   // NPC 对话：桌面 E 键（复用 input 的统一按键状态，避免重复 keydown 监听）
   if (entered && !busy && mode === '2d' && city2d && input.hit('KeyE')) {
     const line = city2d.tryTalk();
     if (line) { window.__neonDebug.talks += 1; toast(line, 3000); audio.blip(1300, 0.05, 0.04); }
   }
-  perfMonitor(dt * 1000);
   input.endFrame();
   requestAnimationFrame(frame);
 }
@@ -444,7 +460,7 @@ let rsz = 0;
 addEventListener('resize', () => {
   clearTimeout(rsz);
   // 不使用可选链语法，避免旧内核浏览器在解析阶段抛 SyntaxError
-  rsz = setTimeout(function () { if (city2d) city2d.resize(); if (city3d) city3d.resize(); fx.resize(); measureHUD(); }, 120);
+  rsz = setTimeout(function () { if (city2d) city2d.resize(); if (city3d) city3d.resize(); fx.resize(); }, 120);
 });
 
 // 任务卡 DOM 注入 + 初始渲染
