@@ -9,6 +9,8 @@ import { GameState, RunStats } from './state.js';
 import { SCORE, HUD, AUDIO } from './config.js';
 
 const AUDIO_BASE = AUDIO.MUSIC_BASE;
+// 维度切换门控的最长封锁时间（秒）。超过则强制开窗，保证玩家永远切得走。
+const GATE_MAX_LOCK = 8;
 const DUCK_MENU = AUDIO.DUCK_MENU;
 
 const $ = (s) => document.querySelector(s);
@@ -572,23 +574,35 @@ function inputFor() {
 
 // 波次门控注入：state.js 不依赖 waves.js，由这里把判定送进去。
 //
-// Q4 要求「只在波次间歇允许切换」，但按字面实现（只看 wave.phase）有个死锁：
-// 玩家只要一直跑、不清场，波次永远停在 clearing/ spawning，**TAB 就永久锁死**。
-// 2D 里玩家步行 62px/s、敌人追击 40px/s，完全跑得掉 —— 这不是理论风险。
+// Q4 要求「只在波次间歇允许切换」。按字面实现（只看 wave.phase）有个死锁：
+// 玩家只要一直跑、不清场，波次永远停在 clearing/spawning，**TAB 就永久锁死**
+// （2D 里玩家步行 62px/s、敌人追击 40px/s，完全跑得掉 —— 这不是理论风险）。
 //
-// 改成「有实时威胁才锁」：只要还有无人机在 chase 状态（即正在 hunt 你）就锁；
-// 一旦全部脱离（进入 patrol），战斗实质上已经结束，开窗放行。
-// 这样既满足 Q4 的本意（不要在被打的时候切维度丢掉 5~6 秒操作权），
-// 又不会把玩家关在 2D 里出不来。此处我做了自主决策，理由见批次 2 报告。
+// 我先试过「有实时威胁（chase 中的敌人）才锁」，结果更糟：
+// 只要场上还有一只 drone 在追，玩家就永远切不出去。第 3 波有 7 只，
+// 实测 24 项回归里的 switch_to_3d 直接挂死（mode 卡在 2d 11 分钟）。
+//
+// 最终方案：**有威胁才锁，但锁有上限**。
+//   · 有 chase 敌人 → 锁（不要在被打的时候丢掉 5~6 秒操作权，这是 Q4 的本意）
+//   · 连续被锁超过 GATE_MAX_LOCK 秒 → 强制开窗并提示「已放行」
+// 上限取 8s：与一次维度转场的代价（2.35s 转场 + 切回强制空降 1.9s ≈ 5~6s）同量级，
+// 不会让玩家的操作权被无限期剥夺；同时保证「永远存在一个能切走的窗口」。
+gs._gateLockSince = 0;
 gs.gatePhase = function () {
   if (!city2d) return null;
+  let chasing = false;
   const ds = city2d.enemies.drones;
   for (let i = 0; i < ds.length; i++) {
-    if (ds[i].active && ds[i].state === 'chase') return 'combat';   // 有敌人正在追
+    if (ds[i].active && ds[i].state === 'chase') { chasing = true; break; }
   }
   const ph = city2d.waves.phase;
-  if (ph === 'spawning' || ph === 'clearing') return 'idle';        // 无威胁 → 开窗
-  return ph;
+  const waveBusy = ph === 'spawning' || ph === 'clearing';
+  if (!chasing && !waveBusy) { gs._gateLockSince = 0; return ph; }   // 开窗
+  const now = performance.now();
+  if (!gs._gateLockSince) { gs._gateLockSince = now; return 'combat'; }
+  if (now - gs._gateLockSince < GATE_MAX_LOCK * 1000) return 'combat';
+  gs._gateLockSince = 0;              // 放行一次后重新计时
+  return 'intermission';              // 必须在放行名单里，'spawning' 仍会被判为 blocked
 };
 
 /** 把 city2d 的战斗数据同步进 RunStats（结算面板的唯一数据源） */
