@@ -20,11 +20,25 @@ export class QuestSystem {
     this.el = null;          // HUD DOM 引用，由 init() 注入
     this._acc = 0;
     this._nextTimer = 0;
+    // P0-14 软锁死修复：race 任务在 2D 下会永远停在 WAIT（onShard/onDistrict/onCheckpoint
+    // 全部因类型不匹配或 !raceActive 而 return，complete 永不触发），
+    // 而游戏没有放弃机制 → 玩家被永久卡死。这里用「20 秒自动改派 + 手动放弃按钮」双出口解决。
+    this.waitT = 0;            // race-WAIT 态已停留时长
+    this._raceLeft = undefined; // 竞速剩余时间（跨 2D/3D 往返保持，不重置为满值）
   }
 
   /** 注入任务卡 DOM 引用 */
   init(el) {
     this.el = el; // { card, title, desc, bar, prog }
+    // 放弃按钮：race-WAIT 态的手动出口，与 20 秒自动改派互补
+    this.skipBtn = document.getElementById('questSkip');
+    if (this.skipBtn) {
+      const self = this;
+      this.skipBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        self.abandon();
+      });
+    }
   }
 
   /** 派发下一个任务 */
@@ -51,7 +65,9 @@ export class QuestSystem {
     if (q.type === 'race') {
       // 竞速任务需要 3D；若当前不在 3D，提示玩家切换，等 onModeChanged 再开跑
       this.raceActive = false;
-      this.hooks.toast('按 TAB 进入 3D 开始竞速');
+      this.waitT = 0;
+      this._raceLeft = undefined;
+      this.hooks.toast('按 TAB 进入 3D 开始竞速 · 20 秒后自动改派');
     } else {
       this.hooks.toast('新任务 · ' + q.title);
     }
@@ -86,9 +102,12 @@ export class QuestSystem {
     if (!c3) return; // 3D 包未就绪：等下次切模式
     c3.setRace(q.n);
     q.done = 0;
-    q.left = q.time;
+    // 剩余时间只在首次设定。原先每次 startRace 都重置为满值，
+    // 于是「2D → 3D → 2D → 3D」的往返会把倒计时刷满，玩家实际拥有无限时间。
+    if (this._raceLeft === undefined) this._raceLeft = q.time;
+    q.left = this._raceLeft;
     this.raceActive = true;
-    this.hooks.toast(`竞速开始 · 限时 ${q.time} 秒`);
+    this.hooks.toast(`竞速开始 · 限时 ${Math.ceil(q.left)} 秒`);
     this.renderCard();
   }
 
@@ -113,11 +132,21 @@ export class QuestSystem {
 
   /** 竞速计时（每帧调用，代价极低） */
   update(dt) {
+    // 结算 / 暂停时冻结所有计时：面板期间不该继续走倒计时
+    if (this.hooks.isGameState && this.hooks.isGameState('RESULT', 'PAUSED')) return;
     const q = this.current;
-    if (!q || q.type !== 'race' || !this.raceActive) return;
+    if (!q) return;
+    // P0-14：race 在 2D 下停留超时 → 自动改派为 collect，解除软锁死
+    if (q.type === 'race' && !this.raceActive) {
+      this.waitT += dt;
+      if (this.waitT >= 20) this.requeueAsCollect('竞速超时 · 已改派为碎片回收');
+      return;
+    }
+    if (q.type !== 'race' || !this.raceActive) return;
     q.left -= dt;
     if (q.left <= 0) {
       this.hooks.toast('竞速超时 · 检查点已重置');
+      this._raceLeft = undefined;   // 超时后允许重新给满时间（新一轮竞速）
       this.startRace(q);
       return;
     }
@@ -128,9 +157,45 @@ export class QuestSystem {
     }
   }
 
+  /**
+   * 把当前 race 任务原地改写为 collect（不走 complete()）。
+   * 刻意不给全额奖励：改派不是"完成"。改派后玩家仍可正常完成它并拿到 collect 的奖励。
+   */
+  requeueAsCollect(msg) {
+    const q = this.current;
+    if (!q) return;
+    this.raceActive = false;
+    // 固定回落到 collect#0（5 碎片 / 50 分）：走模板环会再次拿到 race，死循环
+    const tpl = QUEST_TEMPLATES[0];
+    q.type = 'collect';
+    q.n = tpl.n;
+    q.done = 0;
+    q.title = tpl.title;
+    q.desc = tpl.desc;
+    q.reward = tpl.reward;
+    q.time = 0;
+    q.left = 0;
+    this.waitT = 0;
+    this._raceLeft = undefined;
+    this.hooks.toast(msg);
+    this.hooks.banner('任务改派 · ' + q.title, q.desc);
+    this.renderCard();
+  }
+
+  /** 玩家主动放弃（不等 20 秒）。奖励减半作为代价 */
+  abandon() {
+    const q = this.current;
+    if (!q || q.type !== 'race' || this.raceActive) return false;
+    this.requeueAsCollect('已放弃竞速 · 改派为碎片回收');
+    q.reward = Math.floor(q.reward / 2);
+    this.renderCard();
+    return true;
+  }
+
   completeRace() {
     const q = this.current;
     this.raceActive = false;
+    this._raceLeft = undefined;   // 完成后再开新竞速重新给满时间
     const c3 = this.hooks.getCity3d();
     if (c3) c3.clearRace();
     const used = Math.round((q.time - q.left) * 10) / 10;
@@ -186,8 +251,11 @@ export class QuestSystem {
     }
     el.title.textContent = q.title;
     let prog;
+    // 放弃按钮只在 race-WAIT 态出现（玩家正被卡住的那一刻才给出口）
+    if (this.skipBtn) this.skipBtn.style.display = (q.type === 'race' && !this.raceActive) ? '' : 'none';
     if (q.type === 'race' && !this.raceActive) {
-      el.desc.textContent = q.desc + '（按 TAB 进入 3D）';
+      const left = Math.max(0, Math.ceil(20 - this.waitT));
+      el.desc.textContent = q.desc + `（按 TAB 进入 3D · ${left}s 后自动改派）`;
       prog = 0;
       el.prog.textContent = 'WAIT';
     } else {

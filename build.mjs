@@ -49,7 +49,9 @@ function esbuild(args) {
 step(0, '前置检查');
 if (!existsSync(ESBUILD)) { bad(`未找到 esbuild: ${ESBUILD}`); process.exit(1); }
 if (!existsSync(SRC_HTML)) { bad(`未找到源 html: ${SRC_HTML}`); process.exit(1); }
-for (const f of ['js/main.js', 'js/city3d.js', 'vendor/three/three.module.js']) {
+for (const f of ['js/main.js', 'js/city3d.js', 'js/city2d.js', 'js/config.js', 'js/state.js',
+  'js/feedback.js', 'js/combat.js', 'js/enemy.js', 'js/waves.js',
+  'vendor/three/three.module.js']) {
   if (!existsSync(join(HERE, f))) { bad(`缺少源文件: ${f}`); process.exit(1); }
 }
 ok('esbuild 与全部源文件就位');
@@ -199,6 +201,84 @@ if (/entityScale/.test(mainSrc) || /entityScale/.test(city2dSrc)) bad('主程序
 else ok('主程序无实体缩放链路');
 if (/性能模式 · 场景实体已精简/.test(mainSrc)) bad('js/main.js 含静默降级提示文案「性能模式 · 场景实体已精简」');
 else ok('无静默降级提示文案');
+
+// 7h. 状态转移必须集中管理（T04）
+// GameState.go() 是全项目唯一允许改 cur 的入口。任何 `gs.cur =` 都是绕过转移表的野路子，
+// 会让 TRANSITIONS 白名单形同虚设。同理禁止裸布尔 busy/entered 复活。
+if (/gs\.cur\s*=[^=]/.test(mainSrc)) bad('js/main.js 直接赋值 gs.cur（状态转移未集中管理）');
+else ok('状态转移集中于 GameState.go()');
+if (/\bbusy\b/.test(mainSrc)) bad('js/main.js 复活了裸布尔 busy（应改用 gs.shifting）');
+else ok('无裸布尔 busy');
+if (/\bentered\s*=/.test(mainSrc)) bad('js/main.js 复活了裸布尔 entered（应改用 gs.is）');
+else ok('无裸布尔 entered 赋值');
+
+// 7i. 顿帧冻结期的 dt=0 只能来自 Feedback.frozen（防穿透的单一入口）
+const feedbackSrc = readFileSync(join(HERE, 'js', 'feedback.js'), 'utf8');
+if (!/frozen\s*\(\s*rawDt\s*\)/.test(feedbackSrc)) bad('js/feedback.js 缺少 frozen(rawDt) 入口');
+else ok('顿帧入口 feedback.frozen(rawDt) 存在');
+if (/Math\.min\(0\.05[^)]*\)\s*\*\s*0\b/.test(mainSrc) === false && !/frozen\s*\?\s*0/.test(mainSrc)) {
+  bad('js/main.js 的 simDt 未按 frozen 归零（顿帧期物理会继续积分导致穿透）');
+} else ok('simDt 在顿帧期归零');
+
+// 7j. config.js 字段引用完整性 —— 把「引用了不存在的常量」变成构建失败
+// 背景（实测踩到的）：combat.js 写了 ATK.WINDUP_MOVE_MUL，但该字段实际定义在
+// MOVE.atkWindupMul。JS 里 `undefined` 不报错，只是让 `target = dir * spd * undefined`
+// 变成 NaN，一路传染到 player.x → districtAt(NaN) → undefined → 崩在 genStreet。
+// 表现是「玩了十几秒、打了第一下之后崩」，极难定位。
+// 纯 JS 没有类型系统兜底，所以在构建期静态扫一遍：所有 `GROUP.FIELD` 引用
+// 必须在 config.js 的同名 GROUP 里真实存在。
+step('7j', 'config.js 字段引用完整性');
+{
+  const configSrc = readFileSync(join(HERE, 'js', 'config.js'), 'utf8');
+  // 先剥掉注释，避免注释里的冒号/括号干扰
+  const clean = configSrc
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+  // 按花括号配平切出每个分组的主体（不能用非贪婪 [\s\S]*?\n\}; —— 嵌套对象会提前截断）
+  const groups = new Map();
+  const groupRe = /export const ([A-Z_][A-Z0-9_]*)\s*=\s*\{/g;
+  let gm;
+  while ((gm = groupRe.exec(clean)) !== null) {
+    const name = gm[1];
+    let depth = 1;
+    let i = gm.index + gm[0].length;
+    const start = i;
+    for (; i < clean.length && depth > 0; i++) {
+      const ch = clean[i];
+      if (ch === '{') depth += 1;
+      else if (ch === '}') depth -= 1;
+    }
+    const body = clean.slice(start, i - 1);
+    const keys = new Set();
+    // 顶层字段：标识符紧跟冒号。允许一行多个（`BODY_W: 13, BODY_H: 11,`）
+    // 前置条件用 (?<![A-Za-z0-9_]) 代替 `(?:^|[,{]\s*)`：后者会漏掉分组体的第一个字段
+    //（它前面是 `{` 而非行首，且 `[\s\S]*?` 切出的 body 首字符就是换行 + 缩进）。
+    const keyRe = /(?<![A-Za-z0-9_])([A-Za-z_][A-Za-z0-9_]*)\s*:/g;
+    let km;
+    while ((km = keyRe.exec(body)) !== null) keys.add(km[1]);
+    groups.set(name, keys);
+  }
+  if (groups.size === 0) bad('config.js 未解析出任何常量分组（格式变了？）');
+  const consumers = ['main.js', 'city2d.js', 'combat.js', 'enemy.js', 'waves.js', 'feedback.js', 'state.js']
+    .filter((f) => existsSync(join(HERE, 'js', f)));
+  const missing = [];
+  for (const f of consumers) {
+    const src = readFileSync(join(HERE, 'js', f), 'utf8');
+    const refRe = /\b(MOVE|JUMP|SQUASH|ATK|DRONE|FEEL|WAVE|SCORE|AUDIO|HUD|RENDER|PARTICLE)\.([A-Za-z_][A-Za-z0-9_]*)/g;
+    let rm;
+    while ((rm = refRe.exec(src)) !== null) {
+      const [, g, k] = rm;
+      if (!groups.has(g)) { missing.push(`${f}: 未知分组 ${g}`); continue; }
+      if (!groups.get(g).has(k)) missing.push(`${f}: ${g}.${k} 在 config.js 中不存在`);
+    }
+  }
+  if (missing.length) {
+    for (const m of [...new Set(missing)]) bad(`config 引用不存在 · ${m}`);
+  } else {
+    const total = [...groups.values()].reduce((a, s) => a + s.size, 0);
+    ok(`config.js 字段引用完整（${groups.size} 分组 / ${total} 字段 / ${consumers.length} 消费方）`);
+  }
+}
 
 // ---------------------------------------------------------------- 收尾
 try {

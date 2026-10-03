@@ -12,7 +12,13 @@ export class Progress {
   }
 
   defaults() {
-    return { v: 1, score: 0, shards: 0, questsDone: 0, raceBest: null, districts: {}, achievements: {} };
+    // bestScore/runs/wins/bestWave 是批次 2 新增（PM Q6 决策：沿用 v1 不升版本，
+    // 缺字段走默认值，零迁移风险）。score 仍是历史累计语义，bestScore 是单局最佳。
+    return {
+      v: 1, score: 0, shards: 0, questsDone: 0, raceBest: null,
+      districts: {}, achievements: {},
+      bestScore: 0, runs: 0, wins: 0, bestWave: 0,
+    };
   }
 
   load() {
@@ -27,6 +33,11 @@ export class Progress {
       if (typeof d.raceBest === 'number' && d.raceBest > 0) this.mem.raceBest = d.raceBest;
       if (d.districts && typeof d.districts === 'object') this.mem.districts = d.districts;
       if (d.achievements && typeof d.achievements === 'object') this.mem.achievements = d.achievements;
+      // 批次 2 新增的 4 个字段：旧存档没有它们，直接走 defaults() 的 0，无报错
+      if (typeof d.bestScore === 'number' && d.bestScore >= 0) this.mem.bestScore = Math.floor(d.bestScore);
+      if (typeof d.runs === 'number' && d.runs >= 0) this.mem.runs = Math.floor(d.runs);
+      if (typeof d.wins === 'number' && d.wins >= 0) this.mem.wins = Math.floor(d.wins);
+      if (typeof d.bestWave === 'number' && d.bestWave >= 0) this.mem.bestWave = Math.floor(d.bestWave);
     } catch (e) {
       this.storageOk = false; // 读取失败：从零开始，仅内存态
     }
@@ -72,6 +83,24 @@ export class Progress {
     this.mem.raceBest = sec;
     this.save();
     return true;
+  }
+
+  /** 记录单局最佳得分。返回 true 表示刷新了纪录（结算面板显示"★ 新纪录"） */
+  setBestScore(n) {
+    if (typeof n !== 'number' || n <= 0) return false;
+    if (n <= this.mem.bestScore) return false;
+    this.mem.bestScore = Math.floor(n);
+    this.save();
+    return true;
+  }
+
+  /** 记录一局：局数 +1，胜场 +1（若胜），最远波次取最大 */
+  addRun(win, wave) {
+    this.mem.runs += 1;
+    if (win) this.mem.wins += 1;
+    const w = typeof wave === 'number' ? wave : 0;
+    if (w > this.mem.bestWave) this.mem.bestWave = w;
+    this.save();
   }
 
   isUnlocked(id) {

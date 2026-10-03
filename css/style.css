@@ -242,3 +242,150 @@ body.entered #scoreBoard { transform: none; opacity: 1; }
 body.touch #questCard { left: 10px; bottom: 192px; width: 205px; padding: 10px 12px; }
 body.touch #scoreBoard { left: 50%; right: auto; bottom: auto; top: 10px; padding: 6px 12px; transform: translate(-50%, 30px); }
 body.touch.entered #scoreBoard { transform: translate(-50%, 0); }
+
+/* ================================================================
+   批次 2：战斗 HUD / 面板 / 受击渐晕
+   ================================================================ */
+
+/* ---- 战斗 HUD：视口上中带，4 项常驻生存信息 ---- */
+#combatHud {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 18px;
+  padding: 7px 16px; z-index: 26; pointer-events: none;
+  background: linear-gradient(135deg, rgba(20,8,40,.72), rgba(8,3,18,.55));
+  border: 1px solid rgba(255,255,255,.08);
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
+  opacity: 0; transition: opacity .5s;
+}
+body.entered #combatHud { opacity: 1; }
+#combatHud .hp { display: flex; gap: 5px; }
+#combatHud .hp i {
+  width: 13px; height: 13px; display: block;
+  background: rgba(255,255,255,.1);
+  clip-path: polygon(50% 100%, 0 45%, 0 15%, 25% 0, 50% 18%, 75% 0, 100% 15%, 100% 45%);
+}
+#combatHud .hp i.on { background: #ff3860; box-shadow: 0 0 8px rgba(255,56,96,.7); }
+/* 剩 1 格：2Hz 脉冲警示（PRD P0-4 验收 5） */
+#combatHud .hp.low i.on { animation: hp-pulse .5s ease-in-out infinite; }
+@keyframes hp-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(1.14); } }
+/* 受击红闪（一次性动画，触发时重启） */
+#combatHud .hp.hurt i.on { animation: hp-hurt .22s steps(2) 1; }
+@keyframes hp-hurt { 0% { background:#fff; } 100% { background:#ff3860; } }
+#combatHud .wv { display: flex; align-items: baseline; gap: 8px; font-family: var(--vt); }
+#combatHud .wv span { font-size: 19px; color: #fff; letter-spacing: 1px; }
+#combatHud .wv em { font-style: normal; font-size: 16px; color: var(--cyan); }
+#combatHud .cb {
+  font-family: var(--vt); font-size: 19px; color: var(--amber);
+  text-shadow: 0 0 10px rgba(255,209,102,.6);
+  opacity: 0; transition: opacity .15s;
+}
+#combatHud .cb.on { opacity: 1; }
+body.touch #combatHud { top: 8px; gap: 10px; padding: 5px 10px; }
+body.touch #combatHud .wv span { font-size: 16px; }
+body.touch #combatHud .wv em { font-size: 14px; }
+
+/* ---- 受击红色渐晕（≥150ms，由 Feedback.hurtT 驱动 opacity） ---- */
+#hurtVignette {
+  position: fixed; inset: 0; pointer-events: none; z-index: 24; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(255,40,60,0) 45%, rgba(255,40,60,.55) 100%);
+}
+
+/* ---- 通用模态面板 ---- */
+.panel-modal {
+  position: fixed; inset: 0; z-index: 40; display: none;
+  place-items: center; background: rgba(4,2,10,.82);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  font-family: var(--px);
+}
+.panel-modal.show { display: grid; }
+.mm-box {
+  min-width: 300px; max-width: 88vw; padding: 26px 30px; text-align: center;
+  background: linear-gradient(160deg, rgba(24,10,46,.96), rgba(10,4,22,.96));
+  border: 1px solid rgba(41,240,255,.28);
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+  transform: translateY(0); opacity: 1;
+}
+.mm-box.wide { min-width: 380px; }
+.mm-title { font-family: var(--pp); font-size: 22px; color: #fff; letter-spacing: 3px; text-shadow: 0 0 14px var(--pink); }
+.mm-title.small { font-size: 17px; }
+.mm-sub { font-family: var(--vt); font-size: 17px; color: var(--cyan); letter-spacing: 4px; margin: 4px 0 18px; }
+.mm-btn {
+  display: block; width: 100%; margin: 8px 0; padding: 12px 14px; min-height: 46px;
+  font-size: 14px; letter-spacing: 2px; color: #e8e4ff;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.2);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: background .18s, color .18s, transform .12s;
+}
+.mm-btn:hover { background: rgba(41,240,255,.16); color: #fff; }
+.mm-btn:active { transform: translateY(1px); }
+.mm-btn em { font-style: normal; font-size: 11px; opacity: .5; margin-left: 6px; }
+.mm-btn.primary { background: rgba(255,43,214,.2); border-color: var(--pink); color: #fff; }
+.mm-btn.primary:hover { background: rgba(255,43,214,.34); }
+.mm-best { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.5); }
+.mm-best b { color: var(--cyan); font-family: var(--vt); font-size: 18px; }
+.mm-best span { color: var(--amber); font-family: var(--vt); font-size: 18px; margin-left: 6px; }
+
+/* ---- 玩法说明 ---- */
+.help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin: 16px 0; text-align: left; }
+.help-grid div { display: flex; align-items: center; gap: 5px; font-size: 12px; color: rgba(255,255,255,.75); }
+.help-grid span { margin-left: 4px; }
+.help-note { font-size: 12px; line-height: 1.7; color: rgba(255,255,255,.55); text-align: left; margin-bottom: 14px; }
+
+/* ---- 暂停面板 ---- */
+.pause-sum { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; text-align: left; }
+.pause-sum div { display: flex; justify-content: space-between; padding: 6px 9px; background: rgba(255,255,255,.04); }
+.pause-sum em { font-style: normal; font-size: 11px; color: rgba(255,255,255,.45); }
+.pause-sum b { font-family: var(--vt); font-size: 16px; color: var(--cyan); font-weight: normal; }
+.pause-vol { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,.12); }
+.pause-vol label { display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(255,255,255,.5); margin: 5px 0; }
+.pause-vol input { flex: 1; }
+.vol-note { display: block; margin-top: 5px; font-size: 10px; color: rgba(255,255,255,.3); }
+
+/* ---- 结算面板：从底部滑入 ≥250ms（本设计 280ms） ---- */
+.panel-modal.result .mm-box {
+  transform: translateY(100%);
+  transition: transform .28s cubic-bezier(.2,.9,.2,1);
+}
+.panel-modal.result.show .mm-box { transform: none; }
+.res-title { font-family: var(--pp); font-size: 19px; letter-spacing: 4px; color: var(--cyan); text-shadow: 0 0 16px var(--cyan); }
+.res-sub { font-size: 12px; color: rgba(255,255,255,.55); margin: 6px 0 18px; }
+.res-stats { display: grid; gap: 7px; text-align: left; }
+.res-stats .rs {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 10px; background: rgba(255,255,255,.04);
+  /* 逐条淡入，间隔 60ms（验收判据 10） */
+  opacity: 0; animation: rs-in .3s ease-out forwards;
+  animation-delay: calc(var(--i) * 60ms + 120ms);
+}
+@keyframes rs-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+.res-stats em { font-style: normal; font-size: 12px; color: rgba(255,255,255,.55); letter-spacing: 2px; }
+.res-stats b { font-family: var(--vt); font-size: 19px; color: #fff; font-weight: normal; }
+.grade {
+  margin: 18px 0 6px; font-family: var(--pp); font-size: 46px; line-height: 1;
+  color: var(--cyan); text-shadow: 0 0 24px currentColor;
+  animation: grade-in .45s cubic-bezier(.2,1.4,.4,1) .5s both;
+}
+.grade.lose { color: #ff3860; }
+@keyframes grade-in { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
+.res-record { font-size: 12px; color: var(--amber); margin-bottom: 12px; }
+.res-btns { display: flex; gap: 10px; }
+.res-btns .mm-btn { margin: 0; }
+
+/* ---- 死亡画面失真 ---- */
+body.dying #stage { filter: saturate(.3) hue-rotate(-25deg); transition: filter .6s; }
+
+/* ---- 触屏攻击键：≥64×64px ---- */
+.tbtns button.atk {
+  width: 72px; height: 72px; font-size: 26px; color: #fff;
+  background: rgba(255,43,214,.22); border-color: var(--pink);
+}
+.tbtns button.atk.on { background: rgba(255,43,214,.5); }
+
+/* 任务卡里的「放弃」按钮：仅 race-WAIT 态出现（P0-14 软锁死的手动出口） */
+.q-skip {
+  margin-top: 8px; padding: 6px 10px; width: 100%; min-height: 34px;
+  font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,.7);
+  background: rgba(255,56,96,.14); border: 1px solid rgba(255,56,96,.42);
+  pointer-events: auto; cursor: pointer;
+}
+.q-skip:hover { background: rgba(255,56,96,.3); color: #fff; }

@@ -1,7 +1,11 @@
 import { hash, rng, clamp, lerp, pick, mixHex, rgba, shade, makeCanvas, smooth, easeOutCubic } from './util.js';
 import { districtAt, SHOPS, VERTICAL_WORDS, BIG_WORDS, ADS, PIXEL_FONT, NPC_LINES } from './data.js';
 import { drawTiny, tinyWidth, neonSign, pixelText, pline, pcircle } from './pixel.js';
-import { RENDER, MOVE, JUMP, SQUASH, PARTICLE } from './config.js';
+import { RENDER, MOVE, JUMP, SQUASH, PARTICLE, DRONE, FEEL, SCORE } from './config.js';
+import { Feedback } from './feedback.js';
+import { EnemyManager } from './enemy.js';
+import { PlayerCombat } from './combat.js';
+import { WaveDirector } from './waves.js';
 
 const DISTRICT_LEN = 2600;
 const STREET_SLOT = 184;
@@ -51,7 +55,64 @@ export class City2D {
       sqTx: 1, sqTy: 1, // 形变目标倍率
       sqTau: SQUASH.jumpTau, // 形变回落时间常数
     };
+    // ---- 战斗状态（生命 / 无敌帧 / 死亡）----
+    this.hp = 3;          // 当前生命（3 格）
+    this.maxHp = 3;
+    this.iframes = 0;     // 无敌帧剩余（s）：受击后 1.2s
+    this.hurtCd = 0;      // 接触伤害冷却，避免贴脸时每帧掉血
+    this.combo = 0;       // 连击数
+    this.comboT = 0;      // 连击窗口剩余（s）
+    this.runKills = 0;    // 本局击杀
+    this.runSwings = 0;   // 本局挥击
+    this.runHits = 0;     // 本局命中
+    this.runScore = 0;    // 本局得分
+    this.runShards = 0;   // 本局碎片
+    this.runTime = 0;     // 本局存活秒数
+    this.dying = false;
+    this.deathT = 0;
+    this.maxComboRun = 0;
+    this.onDeathEnd = null;   // 死亡序列结束 → 进 RESULT
+    this._runStarted = false;
+
+    // ---- 战斗模块（顺序敏感：player 必须先建，PlayerCombat 才拿得到同一引用）----
+    this.feedback = new Feedback();
+    this.enemies = new EnemyManager(this.feedback, audio, this);
+    this.waves = new WaveDirector(this.enemies, audio);
+    // 波次事件：通过一波 → 加分 + 提高雨声浓度（难度信号）
+    this.waves.onWaveClear = (wave) => {
+      this.addScore(SCORE.WAVE_CLEAR * wave);
+    };
+    this.waves.onWaveStart = (wave) => {
+      if (audio.setRain) audio.setRain(0.05 + wave * 0.025);
+    };
+    // 第 3 波清空 → 胜利结算
+    this.waves.onDone = () => {
+      if (this.onWin) this.onWin();
+    };
+    this.combat = new PlayerCombat(this.player, this.enemies, this.feedback, audio);
+    // 战斗回调：combat 只管攻击时序，统计与连击交给场景
+    const self = this;
+    this.combat.onSwing = function () { self.runSwings += 1; };
+    this.combat.onHit = function (kind) {
+      self.runHits += 1;
+      self.addCombo();
+      // 命中奖励：10 × (combo - 1)，上限 90
+      const bonus = Math.min(SCORE.COMBO_CAP, SCORE.COMBO_STEP * (self.combo - 1));
+      self.addScore(bonus);
+      if (kind === 'kill') {
+        self.runKills += 1;
+        self.waves.onKill();
+        self.addScore(SCORE.KILL);
+      }
+    };
+
     this.cam = { x: 0 };
+    // 战斗模块的每帧上下文。**必须复用**：每帧 new 一个字面量会给 GC 制造
+    // 60 个短命对象/秒，实测战斗全开时帧时长从 11.3ms 涨到 15.5ms。
+    this._battleCtx = { player: this.player, camX: 0, W: 0, FEET: 0 };
+    // HUD 模型的复用对象（见 getHudModel 的注释）
+    this._hud = { hp: 3, maxHp: 3, iframes: 0, wave: 1, totalWaves: 3, remaining: 0,
+      phase: 'idle', intermission: 0, label: '', combo: 0, kills: 0, score: 0 };
     this.npcs = [];
     this.cars = [];
     this.lanes = [
@@ -455,6 +516,8 @@ export class City2D {
   enter() {
     this.intro = 0;
     const p = this.player;
+    // 重试进入（_runStarted 已 true）：只重置战斗状态，保留现有空降开场观感
+    if (this._runStarted) this.resetRun();
     if (!this.entered) { this.entered = true; p.x = 40; this.npcs = []; this.steam = []; }
     p.y = this.FEET - 170;
     p.vy = 0;
@@ -470,6 +533,145 @@ export class City2D {
     p.sqHold = 0;
     this.cam.x = p.x - this.W * 0.45;
     this.introDrop = true;
+  }
+
+  /**
+   * 重置一局（重试 / 进入 PLAYING 时调用）。
+   * 注意：save.mem.score 与 achievements 不在这里清 —— 那是跨局累计数据（PRD P0-9 验收 5）。
+   */
+  resetRun() {
+    const p = this.player;
+    p.x = 40;
+    p.vx = 0;
+    p.coyoteT = 0;
+    p.bufferT = 0;
+    p.jumpHeld = false;
+    p.apex = 0;
+    p.apexHold = 0;
+    p.sqx = 1;
+    p.sqy = 1;
+    p.sqHold = 0;
+    this.hp = this.maxHp;
+    this.iframes = 0;
+    this.hurtCd = 0;
+    this.combo = 0;
+    this.comboT = 0;
+    this.runKills = 0;
+    this.runSwings = 0;
+    this.runHits = 0;
+    this.runScore = 0;
+    this.runShards = 0;
+    this.runTime = 0;
+    this.dying = false;
+    this.deathT = 0;
+    this.maxComboRun = 0;
+    this.enemies.reset();
+    this.waves.reset();
+    this.combat.reset();
+    this.feedback.reset();
+    this._runStarted = true;
+  }
+
+  /** 局内加分（分数只在本局累计，结算时写入存档） */
+  addScore(n) {
+    this.runScore += n;
+  }
+
+  /** 供 GameState / HUD 读取的战斗数据 */
+  getHudModel() {
+    return {
+      hp: this.hp,
+      maxHp: this.maxHp,
+      iframes: this.iframes,
+      wave: this.waves.wave,
+      totalWaves: 3,
+      remaining: this.waves.remaining(),
+      phase: this.waves.phase,
+      intermission: this.waves.phase === 'intermission' ? this.waves.timer : 0,
+      label: this.waves.label(),
+      combo: this.combo,
+      kills: this.runKills,
+      score: this.runScore,
+    };
+  }
+
+  /**
+   * 击杀掉落：把碎片池里一个未激活的槽直接放到指定位置。
+   * 不新建对象（沿用 shards 池范式），掉落的碎片有实际回收价值。
+   * 池满（12 枚都在场）时，回收最老的一枚 —— 击杀奖励不该被"碎片槽满了"吞掉。
+   */
+  dropShard(x, y) {
+    for (let i = 0; i < this.shards.length; i++) {
+      const s = this.shards[i];
+      if (s.active) continue;
+      s.active = true;
+      s.x = x;
+      s.y0 = Math.max(this.FEET - 44, y);
+      s.seed = Math.random() * 6.28;
+      return s;
+    }
+    // 池满：回收最老的一枚（respawn 剩余最短的 = 最早生成后没被捡的）
+    let oldest = this.shards[0];
+    for (let i = 1; i < this.shards.length; i++) {
+      if (this.shards[i].respawn > oldest.respawn) oldest = this.shards[i];
+    }
+    oldest.active = true;
+    oldest.x = x;
+    oldest.y0 = Math.max(this.FEET - 44, y);
+    oldest.seed = Math.random() * 6.28;
+    return oldest;
+  }
+
+  /**
+   * 玩家受伤。返回 true 表示本次真的造成了伤害。
+   * 无敌帧期间完全免疫（PRD P0-4 验收 2）。
+   */
+  hurtPlayer(dir) {
+    const p = this.player;
+    if (this.iframes > 0 || this.hp <= 0) return false;
+    this.hp -= 1;
+    this.iframes = FEEL.IFRAMES;
+    // 击退：被推离攻击源 ≥8px（190 × 0.09 = 17.1px）
+    p.vx = dir * FEEL.HURT_KNOCK_V;
+    this.feedback.playerHurt();
+    // 断连
+    this.breakCombo();
+    if (this.audio && this.audio.sfxHurt) this.audio.sfxHurt();
+    else if (this.audio) this.audio.blip(220, 0.2, 0.07, 'sawtooth');
+    if (this.hp <= 0) this.onDeath();
+    return true;  }
+  /** 连击累加（2 秒窗口） */
+  addCombo() {
+    this.combo += 1;
+    this.comboT = FEEL.COMBO_WINDOW;
+    if (this.combo > this.maxComboRun) this.maxComboRun = this.combo;
+  }
+
+  breakCombo() {
+    if (this.combo > 0 && this.audio && this.audio.sfxComboBreak) this.audio.sfxComboBreak();
+    this.combo = 0;
+    this.comboT = 0;
+  }
+
+  /** 死亡序列：0.6s 慢镜 + 画面失真 → 通知外层进 RESULT */
+  onDeath() {
+    this.dying = true;
+    this.deathT = 0;
+    // 被打飞的小跳（0.6s 慢镜里仍会推进）
+    this.player.vy = -180;
+    this.player.ground = false;
+    this.feedback.slowmo(FEEL.SLOWMO_DEATH[0], FEEL.SLOWMO_DEATH[1]);
+    if (this.audio && this.audio.sfxDeath) this.audio.sfxDeath();
+    else if (this.audio) this.audio.blip(140, 0.9, 0.08, 'sawtooth');
+  }
+
+  /** 每帧的死亡推进（由 update 调用） */
+  updateDeath(dt) {
+    if (!this.dying) return;
+    this.deathT += dt;
+    if (this.deathT < 0.6) return;
+    this.dying = false;
+    if (this.onDeathEnd) this.onDeathEnd();
   }
 
   getInfo() {
@@ -499,7 +701,9 @@ export class City2D {
     const right = input.down('KeyD', 'ArrowRight') || input.joy.x > 0.3;
     p.run = input.down('ShiftLeft', 'ShiftRight') || input.btn.boost || Math.abs(input.joy.x) > 0.92;
     const dir = (right ? 1 : 0) - (left ? 1 : 0);
-    const target = dir * (p.run ? MOVE.runSpd : MOVE.walkSpd);
+    // 攻击三段对移动的限制：前摇降速 0.35×、判定期锁定
+    const atkMul = this.combat.moveMul();
+    const target = dir * (p.run ? MOVE.runSpd : MOVE.walkSpd) * atkMul;
     // ---- P0-2 移动曲线分离：加速 / 减速 / 转身 三套独立系数 ----
     // 原实现加速与减速共用 acc=9（τ=111ms），转身要走同一条指数曲线约 250ms 才穿过 0 点，
     // 玩家感知为"脚底抹了油"。分离后：起步 τ=75ms、刹车 τ=38ms、转身穿越 0 点约 21ms。
@@ -577,6 +781,43 @@ export class City2D {
       if (Math.floor(p.phase / Math.PI) !== prev) { this.audio.step2d(); if (Math.random() < 0.6) this.spawnSplash(p.x - p.face * 2, this.FEET, 2, 0.5); }
     } else if (p.ground) p.phase = lerp(p.phase, Math.round(p.phase / Math.PI) * Math.PI, dt * 8);
     if (this.shock) { this.shock.t += dt; if (this.shock.t > 0.8) this.shock = null; }
+
+    // ---- 战斗模块（严格按 §4.3 的调用顺序）----
+    // 关键：combat 的判定查询必须在 enemy.update 之后，否则会打到"上一帧位置"的敌人。
+    // 但 PlayerCombat 自身的读输入与状态推进必须在玩家移动之前（它要读 dir/face）。
+    this.combat.update(dt, input);
+
+    const ctx = this._battleCtx;
+    ctx.player = p; ctx.camX = this.cam.x; ctx.W = this.W; ctx.FEET = this.FEET;
+    this.enemies.update(dt, ctx);
+
+    // 接触伤害：敌人与玩家重叠时造成 1 点伤害（无敌帧期间免疫）
+    if (this.hurtCd > 0) this.hurtCd = Math.max(0, this.hurtCd - dt);
+    if (this.hp > 0 && this.iframes <= 0 && this.hurtCd <= 0) {
+      for (let i = 0; i < this.enemies.drones.length; i++) {
+        const d = this.enemies.drones[i];
+        if (!d.active || d.state === 'dying' || d.state === 'recover') continue;
+        if (Math.abs(d.x - p.x) < DRONE.PLAYER_SEPARATION && Math.abs(d.y - p.y) < 30) {
+          this.hurtCd = 0.6;
+          this.hurtPlayer(d.x > p.x ? -1 : 1);
+          break;
+        }
+      }
+    }
+
+    // 波次推进（可能在 enemy.update 之后产生新敌人）
+    this.waves.update(dt, ctx);
+
+    // 存活计时与波次奖励（结算时一次性兑现）
+    if (this.hp > 0 && !this.dying) this.runTime += dt;
+
+    // 无敌帧与连击窗口
+    if (this.iframes > 0) this.iframes = Math.max(0, this.iframes - dt);
+    if (this.comboT > 0) {
+      this.comboT = Math.max(0, this.comboT - dt);
+      if (this.comboT === 0) this.breakCombo();
+    }
+    this.updateDeath(dt);
 
     // camera —— P0-2：τ 由 312ms 收紧到 95ms，并删除 p.face 阶跃偏置
     // 原偏置 p.face * W * 0.1 是随朝向瞬时跳变的项，被慢 lerp 抹平后表现为"每次转身镜头多甩一下"。
@@ -987,6 +1228,14 @@ export class City2D {
     l.globalCompositeOperation = 'source-over';
     l.globalAlpha = 1;
 
+    // ---- 屏幕震动：平移画布而非移动相机 ----
+    // 移动相机会与视差层的 f 系数耦合（远景 f=0.05），震屏幅度只剩 5%，
+    // 不符合"屏幕震动"的语义。平移画布会让边缘露出 ≤5px 空白，
+    // 由 sky/rain 层铺满全屏 + body 底色 #07030f 兜底，视觉上不可见。
+    const sx = Math.round(this.feedback.shakeX);
+    const sy = Math.round(this.feedback.shakeY);
+    if (sx !== 0 || sy !== 0) l.save(), l.translate(sx, sy);
+
     // sky
     const sg = l.createLinearGradient(0, 0, 0, this.GROUND);
     sg.addColorStop(0, pal.sky[0]);
@@ -1038,7 +1287,74 @@ export class City2D {
       l.fillStyle = `rgba(10,4,24,${a})`;
       l.fillRect(0, 0, W, H);
     }
+    // 撤销震屏平移：后续的 composite 与红闪都在未平移的坐标系里做
+    if (sx !== 0 || sy !== 0) l.restore();
+
+    // 受伤红闪：边缘渐晕（在震屏之外，避免跟着抖）
+    const hurt = this.feedback.hurtAlpha();
+    if (hurt > 0) {
+      const g = l.createRadialGradient(W / 2, H / 2, H * 0.32, W / 2, H / 2, H * 0.78);
+      g.addColorStop(0, 'rgba(255,40,60,0)');
+      g.addColorStop(1, `rgba(255,40,60,${0.55 * hurt})`);
+      l.fillStyle = g;
+      l.fillRect(0, 0, W, H);
+    }
     this.composite();
+  }
+
+  /**
+   * 绘制追踪无人机。13×11 的像素造型，无图片资源。
+   * hp=2 完整色 / hp=1 填充变暗表示受损 / flashT>0 整块纯白（100ms 纯白 + 150ms 淡出）
+   */
+  drawDrones(l) {
+    const camX = this.cam.x;
+    const L = camX - DRONE.CULL_PAD;
+    const R = camX + this.W + DRONE.CULL_PAD;
+    for (let i = 0; i < this.enemies.drones.length; i++) {
+      const d = this.enemies.drones[i];
+      if (!d.active) continue;
+      if (d.x < L || d.x > R) continue;   // 视口外不渲染
+      const x = Math.round(d.x - camX);
+      const y = Math.round(d.y);
+      if (d.state === 'dying') {
+        // 死亡动画：0.28s 内高度与 alpha 递减
+        const k = d.dieT / 0.28;
+        l.globalAlpha = Math.max(0, 1 - k);
+        l.fillStyle = '#29f0ff';
+        const hh = Math.max(1, Math.round(11 * (1 - k)));
+        l.fillRect(x - 6, y - hh, 13, hh);
+        l.globalAlpha = 1;
+        continue;
+      }
+      // recover 态：抖动（AI 里已经改了 x，这里只做视觉上的闪烁提示）
+      const body = d.flashT > 0 ? '#ffffff' : (d.hp >= 2 ? '#0d1b2e' : '#2a4a5a');
+      const edge = d.flashT > 0 ? '#ffffff' : '#29f0ff';
+      // 悬停浮动
+      const bob = Math.round(Math.sin(this.time * 4 + d.seed) * 1.5);
+      const top = y - 11 + bob;
+      // 外壳描边
+      l.fillStyle = edge;
+      l.fillRect(x - 6, top + 2, 13, 7);
+      l.fillRect(x - 4, top, 9, 11);
+      l.fillRect(x - 6, top + 3, 2, 4);
+      l.fillRect(x + 5, top + 3, 2, 4);
+      // 主体
+      l.fillStyle = body;
+      l.fillRect(x - 4, top + 2, 9, 7);
+      l.fillRect(x - 2, top + 1, 5, 9);
+      // 单只眼（朝向决定左右）
+      const ex = d.face > 0 ? x + 2 : x - 3;
+      l.fillStyle = '#ff2bd6';
+      l.fillRect(ex, top + 5, 2, 2);
+      // 血条：受损时头顶两格中的右格变空
+      if (d.hp < 2) {
+        l.fillStyle = 'rgba(255,56,96,0.85)';
+        l.fillRect(x - 4, top - 3, 2, 1);
+        l.globalAlpha = 0.25;
+        l.fillRect(x + 2, top - 3, 2, 1);
+        l.globalAlpha = 1;
+      }
+    }
   }
 
   hazeOver(color, a) {
@@ -1355,9 +1671,12 @@ export class City2D {
     }
     // people
     for (const n of this.npcs) if (n.depth < 0) this.drawNPC(n);
+    this.drawDrones(l);
     this.drawPlayer();
     for (const n of this.npcs) if (n.depth >= 0) this.drawNPC(n);
     this.drawShards();
+    // 命中反馈的粒子与刀光画在人物之上（最前层，保证打击感可读）
+    this.feedback.render(l, ox);
     this.drawTalkHint();
     // curb
     l.fillStyle = mixHex('#2a1f3e', pal.haze, 0.2);
@@ -1588,6 +1907,9 @@ export class City2D {
 
   drawPlayer() {
     const l = this.l, p = this.player;
+    // 无敌帧闪烁：8Hz。受击后 1.2s 内 9.6 次翻转。
+    // Math.floor(iframes * 8) % 2 —— 影子也一起跳过，否则地上留个影子很怪。
+    if (this.iframes > 0 && Math.floor(this.iframes * FEEL.IFRAME_BLINK_HZ) % 2 === 1) return;
     for (const g of this.ghosts) {
       if (g.a <= 0.01) continue;
       l.globalAlpha = g.a;

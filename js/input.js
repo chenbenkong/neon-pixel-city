@@ -7,8 +7,9 @@ export class Input {
     this.drag = { dx: 0, dy: 0, active: false };
     this.wheel = 0;
     this.joy = { x: 0, y: 0, active: false };
-    this.btn = { up: false, down: false, boost: false };
+    this.btn = { up: false, down: false, boost: false, atk: false };
     this.touchJump = false;
+    this.touchAtk = false;   // 触屏攻击键的边沿标记，与 touchJump 同范式
 
     addEventListener('keydown', (e) => {
       if (e.target && e.target.tagName === 'INPUT') return;
@@ -74,7 +75,7 @@ export class Input {
 
     document.querySelectorAll('[data-btn]').forEach((b) => {
       const k = b.dataset.btn;
-      const on = (e) => { e.stopPropagation(); e.preventDefault(); this.btn[k] = true; if (k === 'up') this.touchJump = true; b.classList.add('on'); };
+      const on = (e) => { e.stopPropagation(); e.preventDefault(); this.btn[k] = true; if (k === 'up') this.touchJump = true; if (k === 'atk') this.touchAtk = true; b.classList.add('on'); };
       const off = () => { this.btn[k] = false; b.classList.remove('on'); };
       b.addEventListener('pointerdown', on);
       b.addEventListener('pointerup', off);
@@ -105,5 +106,6 @@ export class Input {
     this.drag.dx = this.drag.dy = 0;
     this.wheel = 0;
     this.touchJump = false;
+    this.touchAtk = false;
   }
 }
