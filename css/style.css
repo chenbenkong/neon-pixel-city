@@ -40,6 +40,32 @@ body.shifting #stage { animation: shake 1s steps(12) both; }
     repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px),
     radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
   mix-blend-mode: multiply; animation: crt 5s steps(50) infinite; }
+/*
+ * CRT 扫描线 + 颗粒层。
+ *
+ * mix-blend-mode: screen 是**已确认的性能热点**，但目前**不能删**。
+ *
+ * 性能侧（消融实测，shots/ablate.json，4.67M 档位）：
+ *   这一条 CSS 单独贡献 3.62ms 帧间隔、把 p95 从 22.30ms 压到 11.20ms，
+ *   而它在 JS 侧 work 只占 0.94ms —— 4 倍放大，因为整页混合合成都在 GPU 上做，
+ *   JS Profiler 看不到。
+ *
+ * 视觉侧（数学上几乎无损）：
+ *   CSS 混合结果是 out = (1-α)·Cb + α·screen(Cb, Cs)，
+ *   换成普通叠加是 out' = (1-α)·Cb + α·Cs，
+ *   差值 = α·Cb·(1-Cs) = 0.07 × 背景亮度 × (1 - 噪点亮度)。
+ *   暗色城市背景（Cb ≈ 0.1）+ 浅色噪点（Cs ≈ 0.7）→ 差值 ≈ 0.5/255。
+ *
+ * 为什么还是留着：
+ *   qa/grain-compare.mjs 的 PSNR 门**自己就不可信** —— 零测试（两次截图之间
+ *   什么都不改）过不了，截图高度会从 623 变成 589。工具还有残余时序噪声，
+ *   所以量出来的「纯色区 RMS 11.5」分不清是 blend 造成的还是工具造成的。
+ *   在门修好之前不改。判据不可信就不能动视觉，这条底线不能让。
+ *
+ * inset 也保持 -50%：试过收到 -16%（面积 4.00 倍 → 1.74 倍），但 background
+ * 重复的图案起点随之移动，每个像素拿到的噪点值全变（最大像素差 241、
+ * 纯色区 RMS 20.8、锐度 -5.6%），同样不通过。
+ */
 #crt::after { content: ''; position: absolute; inset: -50%; background-image: var(--grain); opacity: 0.07; mix-blend-mode: screen; animation: grain 0.6s steps(6) infinite; }
 @keyframes crt { 0%, 100% { opacity: 1; } 48% { opacity: 0.92; } 50% { opacity: 1; } }
 @keyframes grain { 0% { transform: translate(0, 0); } 20% { transform: translate(-7%, 4%); } 40% { transform: translate(5%, -6%); } 60% { transform: translate(-3%, 8%); } 80% { transform: translate(8%, -2%); } 100% { transform: translate(0, 0); } }

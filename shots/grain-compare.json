@@ -1,0 +1,20 @@
+{
+  "viewport": "1246x623",
+  "blendBefore": "normal",
+  "psnr": 25.871111542642723,
+  "psnrShift1px": 22.00513494127009,
+  "mae": 3.462974509334096,
+  "maxDiff": 245,
+  "countMax": 1,
+  "sharpBefore": 6.702,
+  "sharpAfter": 6.627,
+  "flatRms": 11.5386250723078,
+  "ok": [
+    "PSNR 25.9dB 比「平移1px」基准 22.0dB 高 3.9dB（差异量级 < 1 像素）",
+    "锐度变化 -1.12%（未变糊）"
+  ],
+  "bad": [
+    "纯色区 RMS 11.539 ≥ 1.0（可能有整体色彩漂移）"
+  ],
+  "verdict": "FAIL"
+}

@@ -172,26 +172,31 @@ async function main() {
         c.enemies.reset(); c.waves.freeze();
         c.player.x = 400; c.player.y = c.FEET; c.player.vx = 0; c.player.vy = 0; c.player.face = 1;
         c.cam.x = c.player.x - c.W * 0.5; c.intro = 1; c.time = 3.0;
-        // grain 是无限动画，锁相位，否则两次截图噪点图案不同
+        // 真正停住渲染：只冻玩家坐标是不够的，主循环还在跑，
+        // CRT 闪烁 / 雨 / 蒸汽 / 噪点相位都在变，两次截图的差异会被运动淹没。
+        window.__neonDebug.stopLoop();
         var st = document.createElement('style');
         st.id = 'freezeGrain';
-        st.textContent = '#crt::after{animation-play-state:paused!important;animation-delay:-0.3s!important}';
+        st.textContent = '*,*::before,*::after{animation-play-state:paused!important}';
         document.head.appendChild(st);
+        window.__neonDebug.renderOnce();
         return 'frozen';
       } catch (e) { return 'ERR ' + e.message; }
     })()`, 'err');
     console.log('画面冻结: ' + frozen);
-    await sleep(600);
+    await sleep(1800);   // 等所有 transition 跑完，否则两次截图的布局高度不同
 
     const blend = await cdp.eval("(function(){var e=document.getElementById('crt');return e?getComputedStyle(e,'::after').mixBlendMode:'n/a';})()", 'n/a');
     console.log('grain mix-blend-mode = ' + blend);
     console.log('');
 
     // A：现状（screen）
+    await cdp.eval("(function(){window.__neonDebug.renderOnce();return 1;})()", 0);
+    await sleep(900);
     const a = await shot(cdp, join(SHOTS, 'grain-a-screen.png'));
     // B：去掉 mix-blend-mode（模拟优化后的效果）
-    await cdp.eval("(function(){var s=document.createElement('style');s.textContent='#crt::after{mix-blend-mode:normal!important}';document.head.appendChild(s);return 1;})()", 0);
-    await sleep(600);
+    if (!args.includes('--null-test')) await cdp.eval("(function(){var s=document.createElement('style');s.textContent='#crt::after{mix-blend-mode:normal!important}';document.head.appendChild(s);return 1;})()", 0);
+    await sleep(900);
     const b = await shot(cdp, join(SHOTS, 'grain-b-normal.png'));
 
     const A = decodePng(readFileSync(a));
@@ -204,7 +209,7 @@ async function main() {
     const shift = shiftPsnr(A, B);
     const flat = flatRms(A, B);
 
-    console.log('=== grain screen → normal 画面差异 ===');
+    console.log(args.includes('--null-test') ? '=== 零测试（两次截图之间什么都不改）===' : '=== grain screen → normal 画面差异 ===');
     console.log(`  尺寸          ${A.w}x${A.h}`);
     console.log(`  PSNR          ${m.psnr === Infinity ? '∞' : m.psnr.toFixed(2) + ' dB'}`);
     console.log(`  「平移1px」基准 ${shift === Infinity ? '∞' : shift.toFixed(2) + ' dB'}   ← 差异必须明显高于这个数才算不可见`);

@@ -149,6 +149,18 @@ window.__neonDebug = {
   talks: 0,
   get city2d() { return city2d; },
   get state() { return gs.cur; },
+  /**
+   * 测试专用：停/启主循环。
+   *
+   * 零视觉劣化对比（PSNR）必须有两张**完全同一帧**的截图。原先只冻结了
+   * 玩家坐标，但主循环还在跑 —— CRT 闪烁动画、雨、蒸汽、噪点相位全在变，
+   * 两次截图的差异被这些运动淹没（实测最大像素差 245、纯色区 RMS 13~20，
+   * 完全是运动造成的，不是被测改动造成的）。
+   * 这个钩子让脚本能真正停住渲染，只在改完 CSS 后手动放一帧。
+   */
+  stopLoop() { if (window.__rafId) { cancelAnimationFrame(window.__rafId); window.__rafId = 0; } },
+  startLoop() { if (!window.__rafId) { last = performance.now(); window.__rafId = requestAnimationFrame(frame); } },
+  renderOnce() { frame(performance.now()); window.__rafId = 0; },
   get quest() { return quest; },
   get audio() { return audio; },
   get hud() { return hudUI; },
@@ -322,7 +334,7 @@ async function boot() {
   city2d.onDeathEnd = () => endRun(false);
   city2d.onWin = () => endRun(true);
   city2d.talkKey = isTouch ? null : 'E'; // 触屏无 E 键，隐藏按键提示（点击对话）
-  requestAnimationFrame(frame);
+  window.__rafId = requestAnimationFrame(frame);   // 登记 id，测试的 stopLoop() 要靠它
   progress(24);
   city3dReady = loadCity3D()
     .then((City3D) => {
@@ -612,7 +624,7 @@ function frame(now) {
   // 冻结期不清 pressed：玩家在 60ms 顿帧内按下的 J 会被下一个非冻结帧消费到
   input.endFrame(frozen);
   perf.work(performance.now() - workT0);
-  requestAnimationFrame(frame);
+  window.__rafId = requestAnimationFrame(frame);
 }
 
 /** 输入闸门：按状态决定这一帧给不给游戏逻辑喂真实输入 */
