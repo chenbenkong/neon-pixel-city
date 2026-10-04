@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
+import { edgeProfile } from './edge-profile.mjs';
 const D='C:/Users/moli/WorkBuddy/2026-09-26-23-23-41/qa';
 const EDGE='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
@@ -11,7 +12,7 @@ const ku=(c,code,vk)=>c.send('Input.dispatchKeyEvent',{type:'keyUp',code,key:cod
 const tap=async(c,code,vk,ms=50)=>{await kd(c,code,vk);await sleep(ms);await ku(c,code,vk)};
 async function we(p){const d=Date.now()+30000;while(Date.now()<d){try{const r=await fetch('http://127.0.0.1:'+p+'/json/version');if(r.ok)return r.json()}catch{}await sleep(300)}throw 0}
 const P=9650;
-const edge=spawn(EDGE,['--headless=new','--remote-debugging-port='+P,'--user-data-dir='+join(D,'.edge-ab'+Date.now()),'--window-size=1280,720','--mute-audio','--no-first-run','--use-gl=angle','--use-angle=d3d11','about:blank'],{stdio:'ignore'});
+const edge=spawn(EDGE,['--headless=new','--remote-debugging-port='+P,'--user-data-dir='+edgeProfile('ab'),'--window-size=1280,720','--mute-audio','--no-first-run','--use-gl=angle','--use-angle=d3d11','about:blank'],{stdio:'ignore'});
 try{
 await we(P);
 const list=await(await fetch('http://127.0.0.1:'+P+'/json/list')).json();

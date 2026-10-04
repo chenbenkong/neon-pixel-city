@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 class Cdp {
@@ -13,7 +14,7 @@ class Cdp {
   send(method, params = {}) { const id = (this.id += 1); return new Promise((res, rej) => { this.p.set(id, { res, rej }); this.ws.send(JSON.stringify({ id, method, params })); setTimeout(() => { if (this.p.has(id)) { this.p.delete(id); rej(new Error('to')); } }, 30000); }); }
   async eval(e) { const r = await this.send('Runtime.evaluate', { expression: e, returnByValue: true }); if (r.exceptionDetails) throw new Error(JSON.stringify(r.exceptionDetails).slice(0, 300)); return r.result.value; }
 }
-const prof = join(__dirname, `tmp-vt-${Date.now()}`);
+const prof = edgeProfile('vartest'); // 原：join(__dirname, `...`) —— profile 是可再生的一次性产物，不该落在仓库里
 mkdirSync(prof, { recursive: true });
 const edge = spawn('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', ['--headless=new', '--remote-debugging-port=9325', `--user-data-dir=${prof}`, 'about:blank'], { stdio: 'ignore' });
 try {

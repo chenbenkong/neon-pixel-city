@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = __dirname.replace(/[\\/]qa$/, '');
@@ -36,7 +37,7 @@ const keyUp = (c, code, vk) => c.send('Input.dispatchKeyEvent', { type: 'keyUp',
 
 const srv = spawn(PY, ['-m', 'http.server', String(PORT), '--directory', REPO], { stdio: 'ignore' });
 await sleep(1200);
-const edge = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${join(__dirname, '.edge-heap')}`,
+const edge = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${edgeProfile('heap')}`,
   '--window-size=1280,720', '--mute-audio', '--no-first-run', '--disable-extensions',
   '--use-gl=angle', '--use-angle=d3d11', '--js-flags=--expose-gc', 'about:blank'], { stdio: 'ignore' });
 

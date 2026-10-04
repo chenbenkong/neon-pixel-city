@@ -17,6 +17,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
@@ -57,7 +58,7 @@ async function main() {
   killEdge();
   await sleep(4000);
   const edge = spawn(EDGE, ['--headless=new', '--remote-debugging-port=' + PORT,
-    '--user-data-dir=' + join(__dirname, '.edge-abl' + Date.now()),
+    '--user-data-dir=' + edgeProfile('abl'),
     '--window-size=' + W + ',' + H, '--mute-audio', '--no-first-run', '--disable-extensions',
     '--use-gl=angle', '--use-angle=d3d11', 'about:blank'], { stdio: 'ignore' });
   try {

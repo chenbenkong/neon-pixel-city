@@ -11,6 +11,7 @@ import { spawn } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -28,7 +29,7 @@ const alive = (p) => new Promise((r) => {
 
 if (!(await alive(CDP))) {
   spawn(EDGE, ['--headless=new', '--remote-debugging-port=' + CDP,
-    '--user-data-dir=' + join(ROOT, '.edge-e2e' + Date.now()),
+    '--user-data-dir=' + edgeProfile('e2e'),
     '--window-size=1280,720', '--mute-audio', '--no-first-run',
     '--use-gl=angle', '--use-angle=d3d11', 'about:blank'], { stdio: 'ignore', detached: true }).unref();
   for (let i = 0; i < 60; i++) { if (await alive(CDP)) break; await sleep(300); }

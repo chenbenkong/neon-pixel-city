@@ -22,6 +22,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SHOTS = join(__dirname, '..', 'shots');
@@ -149,7 +150,7 @@ async function main() {
   try { spawn('taskkill', ['/F', '/IM', 'msedge.exe', '/T'], { stdio: 'ignore' }); } catch { /* */ }
   await sleep(4000);
   const edge = spawn(EDGE, ['--headless=new', '--remote-debugging-port=' + PORT,
-    '--user-data-dir=' + join(__dirname, '.edge-gr' + Date.now()),
+    '--user-data-dir=' + edgeProfile('gr'),
     '--window-size=1280,720', '--mute-audio', '--no-first-run', '--disable-extensions',
     '--use-gl=angle', '--use-angle=d3d11', 'about:blank'], { stdio: 'ignore' });
   try {

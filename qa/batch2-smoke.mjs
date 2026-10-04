@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PY = 'C:/Users/moli/.workbuddy/binaries/python/versions/3.13.12/python.exe';
@@ -26,7 +27,7 @@ async function waitEndpoint(port) { const dl = Date.now() + 30000; while (Date.n
 const keyDown = (c, code, vk) => c.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', code, key: code.replace('Key', '').toLowerCase(), windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk });
 const keyUp = (c, code, vk) => c.send('Input.dispatchKeyEvent', { type: 'keyUp', code, key: code.replace('Key', '').toLowerCase(), windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk });
 
-const edge = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${join(__dirname, '.edge-smoke')}`,
+const edge = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${edgeProfile('smoke')}`,
   '--window-size=1280,720', '--mute-audio', '--no-first-run', '--disable-extensions',
   '--use-gl=angle', '--use-angle=d3d11', 'about:blank'], { stdio: 'ignore' });
 try {

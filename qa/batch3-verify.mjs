@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
@@ -38,7 +39,7 @@ const add = (id, d, p, det) => { checks.push({ id, desc: d, pass: !!p, detail: d
 async function waitEp(port, t = 30000) { const dl = Date.now() + t; while (Date.now() < dl) { try { const r = await fetch(`http://127.0.0.1:${port}/json/version`); if (r.ok) return r.json(); } catch { /* */ } await sleep(300); } throw new Error('no ep'); }
 
 async function main() {
-  const edge = spawn(EDGE, ['--headless=new', '--remote-debugging-port=' + PORT, '--user-data-dir=' + join(__dirname, '.edge-b3-' + Date.now()),
+  const edge = spawn(EDGE, ['--headless=new', '--remote-debugging-port=' + PORT, '--user-data-dir=' + edgeProfile('b3-'),
     '--window-size=1280,720', '--mute-audio', '--no-first-run', '--use-gl=angle', '--use-angle=d3d11', 'about:blank'], { stdio: 'ignore' });
   const errors = [];
   try {

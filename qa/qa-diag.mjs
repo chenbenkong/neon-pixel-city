@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CFG = { url: process.argv[2] || 'http://127.0.0.1:8131/', port: Number(process.argv[3] || 9320) };
@@ -42,7 +43,7 @@ async function waitEndpoint(port) {
   throw new Error('no endpoint');
 }
 
-const prof = join(__dirname, `tmp-diag-${CFG.port}-${Date.now()}`);
+const prof = edgeProfile('diag'); // 原：join(__dirname, `...`) —— profile 是可再生的一次性产物，不该落在仓库里
 mkdirSync(prof, { recursive: true });
 const edge = spawn('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', [
   '--headless=new', `--remote-debugging-port=${CFG.port}`, `--user-data-dir=${prof}`,

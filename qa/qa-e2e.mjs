@@ -20,6 +20,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -545,7 +546,7 @@ async function suiteNols(cdp) {
 
 // ---------------- main ----------------
 async function main() {
-  const prof = join(__dirname, `tmp-qa-${CFG.port}-${Date.now()}`);
+  const prof = edgeProfile('e2e'); // 原：join(__dirname, `...`) —— profile 是可再生的一次性产物，不该落在仓库里
   mkdirSync(prof, { recursive: true });
   const flags = [
     '--headless=new', `--remote-debugging-port=${CFG.port}`, `--user-data-dir=${prof}`,

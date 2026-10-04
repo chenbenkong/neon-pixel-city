@@ -1,6 +1,7 @@
 /** prof.mjs —— 逐段计时，定位批次 2 引入的帧时长回归 */
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
+import { edgeProfile } from './edge-profile.mjs';
 const DIR = 'C:/Users/moli/WorkBuddy/2026-09-26-23-23-41/qa';
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -13,7 +14,7 @@ class Cdp {
 }
 async function we(p) { const d = Date.now() + 30000; while (Date.now() < d) { try { const r = await fetch('http://127.0.0.1:' + p + '/json/version'); if (r.ok) return r.json(); } catch { /* */ } await sleep(300); } throw new Error('no ep'); }
 const PORT = 9560;
-const edge = spawn(EDGE, ['--headless=new', '--remote-debugging-port=' + PORT, '--user-data-dir=' + join(DIR, '.edge-prof' + Date.now()),
+const edge = spawn(EDGE, ['--headless=new', '--remote-debugging-port=' + PORT, '--user-data-dir=' + edgeProfile('prof'),
   '--window-size=1280,720', '--mute-audio', '--no-first-run', '--use-gl=angle', '--use-angle=d3d11', 'about:blank'], { stdio: 'ignore' });
 try {
   await we(PORT);

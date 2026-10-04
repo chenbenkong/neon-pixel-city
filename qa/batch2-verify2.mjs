@@ -9,6 +9,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, '..', 'shots');
@@ -56,7 +57,7 @@ const VALID = ['BOOT', 'MENU', 'PLAYING', 'PAUSED', 'RESULT'];
 
 async function main() {
   try { mkdirSync(OUT, { recursive: true }); } catch { /* exists */ }
-  const edge = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${join(__dirname, '.edge-b2w-' + Date.now())}`,
+  const edge = spawn(EDGE, ['--headless=new', `--remote-debugging-port=${CDP}`, `--user-data-dir=${edgeProfile('b2w-')}`,
     '--window-size=1280,720', '--mute-audio', '--no-first-run', '--disable-extensions',
     '--use-gl=angle', '--use-angle=d3d11', 'about:blank'], { stdio: 'ignore' });
   const errors = [];

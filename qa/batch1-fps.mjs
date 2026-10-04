@@ -14,6 +14,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = __dirname.replace(/[\\/]qa$/, '');
@@ -93,7 +94,7 @@ async function main() {
   const srv = spawn(PY, ['-m', 'http.server', String(PORT), '--directory', REPO], { stdio: 'ignore' });
   await sleep(1200);
   const edge = spawn(EDGE, [
-    '--headless=new', `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${join(__dirname, '.edge-fps-' + TAG)}`,
+    '--headless=new', `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${edgeProfile('fps-' + TAG)}`,
     '--window-size=1280,720', '--hide-scrollbars', '--mute-audio',
     '--no-first-run', '--no-default-browser-check', '--disable-extensions',
     // 硬性要求：不加 --use-angle=d3d11 会退回 SwiftShader 软件渲染，测出的是伪影帧率

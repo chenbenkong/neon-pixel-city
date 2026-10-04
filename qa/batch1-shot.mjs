@@ -29,6 +29,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { edgeProfile } from './edge-profile.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = __dirname.replace(/[\\/]qa$/, '');
@@ -158,7 +159,7 @@ async function main() {
   await sleep(1200);
   // --use-angle=d3d11 是必须的：缺了它 headless 会退回 SwiftShader 软件渲染，帧率与画面都不可信
   const edge = spawn(EDGE, [
-    '--headless=new', `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${join(__dirname, '.edge-shot-' + TAG)}`,
+    '--headless=new', `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${edgeProfile('shot-' + TAG)}`,
     '--window-size=1280,720', '--hide-scrollbars', '--mute-audio',
     '--no-first-run', '--no-default-browser-check', '--disable-extensions',
     '--use-gl=angle', '--use-angle=d3d11', 'about:blank',
