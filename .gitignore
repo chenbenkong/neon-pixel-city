@@ -1,2 +1,8 @@
 .build-tmp*
 node_modules/
+
+# QA 产物与浏览器 profile（不入库）
+qa/.edge-*/
+qa/*.log
+shots/*.png
+shots/*.webp

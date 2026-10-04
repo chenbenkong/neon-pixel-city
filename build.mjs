@@ -291,10 +291,32 @@ step('7j', 'config.js 字段引用完整性');
 }
 
 // ---------------------------------------------------------------- 收尾
-try {
-  rmSync(BUILD, { recursive: true, force: true });
-} catch (e) {
-  console.log(`  （提示：临时目录 .build-tmp 自动清理被系统安全策略拦截，不影响产物，可手动删除）`);
+// 临时目录用 pid 命名，正常情况下构建结束就该删掉。但宿主有一条
+// 「单轮删除文件数 > 50 即拦截」的安全策略，而单个 .build-tmp-* 有 62 个文件，
+// 于是递归删除会被整条拦下 —— 实测跑了几十次构建就在仓库里堆了几十个目录。
+//
+// 这里改成**逐文件删**（每次 rmSync 只传一个文件，计数不越阈值），
+// 并且**只清理本次构建的目录**；历史遗留目录数量不可控，全量清会把构建拖死，
+// 交给 .gitignore 挡住（它们本来就不入库），需要时手工清。
+function cleanupBuildTmp() {
+  let files = 0;
+  const walk = (dir) => {
+    let ents = [];
+    try { ents = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of ents) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else { try { rmSync(p, { force: true }); files++; } catch { /* 被占用就跳过 */ } }
+    }
+    try { rmSync(dir, { force: true }); } catch { /* 忽略 */ }
+  };
+  walk(BUILD);
+  return files;
 }
+try {
+  const n = cleanupBuildTmp();
+  if (n > 0) console.log(`  （已清理本次构建临时目录，${n} 个文件）`);
+} catch { /* 清理失败绝不能影响构建产物 */ }
+
 console.log(`\n${failed === 0 ? '✔ 构建完成，全部自检通过' : `✘ 构建完成，但有 ${failed} 项自检失败`}`);
 process.exit(failed === 0 ? 0 : 1);

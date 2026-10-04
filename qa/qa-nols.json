@@ -1,0 +1,192 @@
+{
+  "label": "QA-NOLS",
+  "suite": "nols",
+  "url": "http://127.0.0.1:8131/",
+  "console": [],
+  "exceptions": [],
+  "samples": [
+    {
+      "t": 9765,
+      "where": "nols-2d",
+      "score": "0",
+      "shard": "0",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 0,
+        "shards": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 0,
+        "questType": "collect",
+        "questDone": 0,
+        "questN": 5,
+        "talks": 0
+      }
+    },
+    {
+      "t": 11242,
+      "where": "nols-2d",
+      "score": "10",
+      "shard": "1",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 0
+      }
+    },
+    {
+      "t": 12719,
+      "where": "nols-2d",
+      "score": "10",
+      "shard": "1",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 0
+      }
+    },
+    {
+      "t": 14209,
+      "where": "nols-2d",
+      "score": "10",
+      "shard": "1",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 1
+      }
+    },
+    {
+      "t": 15689,
+      "where": "nols-2d",
+      "score": "10",
+      "shard": "1",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 1
+      }
+    },
+    {
+      "t": 17175,
+      "where": "nols-2d",
+      "score": "10",
+      "shard": "1",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 1
+      }
+    },
+    {
+      "t": 18642,
+      "where": "nols-2d",
+      "score": "10",
+      "shard": "1",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 1
+      }
+    },
+    {
+      "t": 20119,
+      "where": "nols-2d",
+      "score": "10",
+      "shard": "1",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 2
+      }
+    }
+  ],
+  "result": {
+    "localStorage": "THROWS:SecurityError",
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "checks": {
+    "nols_boot_100": {
+      "pass": true,
+      "detail": "pct=100% ls=THROWS:SecurityError"
+    },
+    "boot_voxel_ok": {
+      "pass": true,
+      "detail": "LOADING VOXEL SKYLINE ..................... OK"
+    },
+    "nols_score_works_in_memory": {
+      "pass": true,
+      "detail": "score=10 shards=1"
+    },
+    "nols_switch_3d_ok": {
+      "pass": true,
+      "detail": "3D 可用（不因存档失败卡死）"
+    }
+  }
+}

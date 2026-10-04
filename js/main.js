@@ -49,12 +49,49 @@ class PerfWatch {
     this.n = n;
     this.i = 0;
     this.len = 0;
+    // 工作时长用独立缓冲：与 interval 的采样点不同，混在一起会互相污染
+    this.wlen_max = n;
+    this.wbuf = new Float32Array(n);
+    this.wi = 0;
+    this.wlen = 0;
   }
-  /** 入队一帧真实时长（毫秒，不 clamp —— 长卡顿必须被如实记录） */
+  /**
+   * 入队一帧真实时长（毫秒，不 clamp —— 长卡顿必须被如实记录）。
+   *
+   * ⚠️ 重要：这是**帧间隔**（两次 rAF 回调之间的时间），受 vsync 节奏支配。
+   * 锁 vsync 到 90Hz 时，只要工作没超预算，它就永远显示 11.1ms —— 与实际负载无关。
+   * 判断"会不会卡"要看 work()，两者必须一起读。
+   */
   sample(ms) {
     this.buf[this.i] = ms;
     this.i = (this.i + 1) % this.n;
     if (this.len < this.n) this.len += 1;
+  }
+  /**
+   * 入队一帧的**同步工作时长**（frame() 入口到 requestAnimationFrame 之间的 CPU 耗时）。
+   * 不含 rAF 回调之间的空档，所以不受 vsync 支配 —— 这才是真实的性能余量。
+   */
+  work(ms) {
+    this.wbuf[this.wi] = ms;
+    this.wi = (this.wi + 1) % this.wlen_max;
+    if (this.wlen < this.wlen_max) this.wlen += 1;
+  }
+  workAvg() {
+    if (!this.wlen) return 0;
+    let s = 0;
+    for (let i = 0; i < this.wlen; i++) s += this.wbuf[i];
+    return s / this.wlen;
+  }
+  workStats() {
+    if (!this.wlen) return { avg: 0, p95: 0, max: 0, frames: 0 };
+    const a = Array.prototype.slice.call(this.wbuf, 0, this.wlen);
+    a.sort((x, y) => x - y);
+    return {
+      avg: +(a.reduce((s, x) => s + x, 0) / a.length).toFixed(2),
+      p95: +a[Math.floor(a.length * 0.95)].toFixed(2),
+      max: +a[a.length - 1].toFixed(2),
+      frames: a.length,
+    };
   }
   avg() {
     if (!this.len) return 0;
@@ -133,7 +170,13 @@ window.__neonDebug = {
       questType: q ? q.type : null, questDone: q ? q.done : 0, questN: q ? q.n : 0,
       talks: window.__neonDebug.talks,
       // 性能观测（只读，不参与任何降级决策）
-      perf: { avg: perf.avg(), p95: perf.p95(), max: perf.max(), frames: perf.len },
+      perf: {
+        // 帧间隔（观感平滑度；锁 vsync 时会被封顶，不要单独用它判断性能余量）
+        avg: perf.avg(), p95: perf.p95(), max: perf.max(), frames: perf.len,
+        // 帧内工作时长（真实 CPU 余量，不受 vsync 支配）
+        workAvg: perf.workStats().avg, workP95: perf.workStats().p95,
+        workMax: perf.workStats().max, workFrames: perf.workStats().frames,
+      },
       // 双时间轴：rawDt 真实帧时长 / lastSimDt 送进游戏逻辑的步长（顿帧期为 0）
       rawDt: lastRawDt, lastSimDt: lastSimDt,
       // 手感观测：跳跃三件套与移动曲线的直接证据
@@ -529,6 +572,9 @@ let lastRawDt = 0, lastSimDt = 0;
  *   第二个 `if (frozen)` —— 否则物理会在冻结帧继续积分导致穿透。
  */
 function frame(now) {
+  // 帧内同步工作时长：入口打点，出口（rAF 之前）收点。
+  // 不含 rAF 之间的空档，因此不受 vsync 支配 —— 判断真实余量必须用它，不是 rawDt。
+  const workT0 = performance.now();
   // ① 双时间轴
   const rawDt = (now - last) / 1000;
   last = now;
@@ -565,6 +611,7 @@ function frame(now) {
   }
   // 冻结期不清 pressed：玩家在 60ms 顿帧内按下的 J 会被下一个非冻结帧消费到
   input.endFrame(frozen);
+  perf.work(performance.now() - workT0);
   requestAnimationFrame(frame);
 }
 

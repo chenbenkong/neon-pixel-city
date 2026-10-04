@@ -1,0 +1,854 @@
+{
+  "label": "QA-ONLINE-FULL",
+  "suite": "full",
+  "url": "https://chenbenkong.github.io/neon-pixel-city/",
+  "console": [],
+  "exceptions": [],
+  "samples": [
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00018 MSPD 012 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 0
+      },
+      "t": 14180,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00028 MSPD 012 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 1
+      },
+      "t": 16161,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00038 MSPD 011 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 1
+      },
+      "t": 18148,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00047 MSPD 014 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 1
+      },
+      "t": 20105,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00054 MSPD 027 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 2
+      },
+      "t": 22023,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00064 MSPD 015 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 2
+      },
+      "t": 23983,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00072 MSPD 026 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 2
+      },
+      "t": 25890,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00082 MSPD 011 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 2
+      },
+      "t": 27882,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00091 MSPD 013 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 3
+      },
+      "t": 29866,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00101 MSPD 014 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 3
+      },
+      "t": 31856,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00128 MSPD 004 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 4
+      },
+      "t": 33847,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00150 MSPD 026 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 4
+      },
+      "t": 35758,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00177 MSPD 004 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 5
+      },
+      "t": 37729,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00203 MSPD 005 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 5
+      },
+      "t": 39705,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00226 MSPD 026 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 6
+      },
+      "t": 41636,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00253 MSPD 005 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 6
+      },
+      "t": 43613,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00276 MSPD 027 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 6
+      },
+      "t": 45516,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00303 MSPD 006 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 7
+      },
+      "t": 47495,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "10",
+      "shard": "1",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "1/5",
+      "qBar": "20%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "九龙寨城",
+      "tele": "POS 00326 MSPD 025 KM/HRAIN 87%",
+      "save": "{\"v\":1,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":{\"九龙寨城\":1},\"achievements\":{\"first_shard\":1}}",
+      "dbg": {
+        "mode": "2d",
+        "entered": true,
+        "score": 10,
+        "shards": 1,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 1,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 1,
+        "questN": 5,
+        "talks": 7
+      },
+      "t": 49415,
+      "where": "2d"
+    },
+    {
+      "t": 53909,
+      "where": "3d-collect",
+      "shards": 2,
+      "score": 20,
+      "quest": "collect 2/5"
+    },
+    {
+      "t": 54135,
+      "where": "3d-collect",
+      "shards": 3,
+      "score": 30,
+      "quest": "collect 3/5"
+    },
+    {
+      "t": 54346,
+      "where": "3d-collect",
+      "shards": 4,
+      "score": 40,
+      "quest": "collect 4/5"
+    },
+    {
+      "t": 54567,
+      "where": "3d-collect",
+      "shards": 5,
+      "score": 100,
+      "quest": "null 0/0"
+    },
+    {
+      "t": 60558,
+      "where": "3d-collect",
+      "shards": 6,
+      "score": 190,
+      "quest": "collect 1/10"
+    },
+    {
+      "t": 60573,
+      "where": "3d-collect",
+      "shards": 7,
+      "score": 200,
+      "quest": "collect 2/10"
+    },
+    {
+      "t": 60805,
+      "where": "3d-collect",
+      "shards": 8,
+      "score": 210,
+      "quest": "collect 3/10"
+    },
+    {
+      "t": 61024,
+      "where": "3d-collect",
+      "shards": 9,
+      "score": 220,
+      "quest": "collect 4/10"
+    },
+    {
+      "t": 61234,
+      "where": "3d-collect",
+      "shards": 10,
+      "score": 230,
+      "quest": "collect 5/10"
+    },
+    {
+      "t": 61446,
+      "where": "3d-collect",
+      "shards": 11,
+      "score": 240,
+      "quest": "collect 6/10"
+    },
+    {
+      "t": 61658,
+      "where": "3d-collect",
+      "shards": 12,
+      "score": 250,
+      "quest": "collect 7/10"
+    },
+    {
+      "t": 61669,
+      "where": "3d-collect",
+      "shards": 13,
+      "score": 260,
+      "quest": "collect 8/10"
+    },
+    {
+      "t": 61879,
+      "where": "3d-collect",
+      "shards": 14,
+      "score": 270,
+      "quest": "collect 9/10"
+    },
+    {
+      "t": 62090,
+      "where": "3d-collect",
+      "shards": 15,
+      "score": 380,
+      "quest": "null 0/0"
+    },
+    {
+      "t": 73838,
+      "where": "race-checkpoint",
+      "idx": 1,
+      "total": 4,
+      "quest": "1/4",
+      "score": 380
+    },
+    {
+      "t": 74201,
+      "where": "race-checkpoint",
+      "idx": 2,
+      "total": 4,
+      "quest": "2/4",
+      "score": 380
+    },
+    {
+      "t": 74572,
+      "where": "race-checkpoint",
+      "idx": 3,
+      "total": 4,
+      "quest": "3/4",
+      "score": 380
+    }
+  ],
+  "result": {
+    "instrumentation": "{\"qaInst\":true,\"setterHit\":1,\"c3\":true,\"instErr\":null}",
+    "walkRunRounds": 9,
+    "raceNeededDoubleSwitch": true,
+    "touch": {
+      "questCard": {
+        "l": 18,
+        "t": 280,
+        "r": 270,
+        "b": 408
+      },
+      "joy": {
+        "l": 28,
+        "t": 547,
+        "r": 156,
+        "b": 675
+      },
+      "scoreBoard": {
+        "l": 623,
+        "t": 10,
+        "r": 809,
+        "b": 64
+      },
+      "tbtns": {
+        "l": 1006,
+        "t": 611,
+        "r": 1222,
+        "b": 675
+      },
+      "qOverlapsJoy": false,
+      "qOverlapsBtns": false,
+      "sbOverlapsBtns": false,
+      "sbOverlapsJoy": false
+    },
+    "saveRaw": "{\"v\":1,\"score\":530,\"shards\":15,\"questsDone\":4,\"raceBest\":4.2,\"districts\":{\"九龙寨城\":1,\"歌舞伎町\":1,\"义体市场\":1,\"霓虹港湾\":1,\"数据坟场\":1,\"天穹露台\":1},\"achievements\":{\"first_shard\":1,\"first_flight\":1,\"first_quest\":1,\"all_districts\":1,\"shard_10\":1,\"race_record\":1}}",
+    "persistence": {
+      "pre": {
+        "mode": "2d",
+        "entered": true,
+        "score": 530,
+        "shards": 15,
+        "questsDone": 4,
+        "raceBest": 4.2,
+        "districts": 6,
+        "achievements": 6,
+        "questType": "collect",
+        "questDone": 0,
+        "questN": 15,
+        "talks": 7
+      },
+      "post": {
+        "mode": "2d",
+        "entered": true,
+        "score": 530,
+        "shards": 15,
+        "questsDone": 4,
+        "raceBest": 4.2,
+        "districts": 6,
+        "achievements": 6,
+        "questType": "collect",
+        "questDone": 0,
+        "questN": 5,
+        "talks": 0
+      },
+      "postSaveRaw": "{\"v\":1,\"score\":530,\"shards\":15,\"questsDone\":4,\"raceBest\":4.2,\"districts\":{\"九龙寨城\":1,\"歌舞伎町\":1,\"义体市场\":1,\"霓虹港湾\":1,\"数据坟场\":1,\"天穹露台\":1},\"achievements\":{\"first_shard\":1,\"first_flight\":1,\"first_quest\":1,\"all_districts\":1,\"shard_10\":1,\"race_record\":1}}"
+    },
+    "fps2d": {
+      "phase": "2d",
+      "samples": 130,
+      "avgMs": 11.6,
+      "avgFps": 86,
+      "p95Ms": 11.2
+    },
+    "fps3d": null,
+    "fpsBack": null,
+    "frameMarks": {
+      "mark3d": 3513,
+      "markBack": 5370,
+      "total": 130
+    },
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "checks": {
+    "boot_100": {
+      "pass": true,
+      "detail": "pct=100% enterEnabled=true"
+    },
+    "boot_voxel_ok": {
+      "pass": true,
+      "detail": "LOADING VOXEL SKYLINE ..................... OK"
+    },
+    "entered": {
+      "pass": true,
+      "detail": "{\"mode\":\"2d\",\"entered\":true,\"score\":10,\"shards\":1,\"questsDone\":0,\"raceBest\":null,\"districts\":0,\"achievements\":1,\"questType\":\"collect\",\"questDone\":1,\"questN\":5,\"talks\":0}"
+    },
+    "walk_changes_district": {
+      "pass": true,
+      "detail": "districts seen: 歌舞伎町,九龙寨城"
+    },
+    "shard_collect_2d": {
+      "pass": true,
+      "detail": "shards=1 score=10 (+10/枚)"
+    },
+    "npc_talk_2d": {
+      "pass": true,
+      "detail": "talks=7"
+    },
+    "quest_received_and_progress": {
+      "pass": true,
+      "detail": "quest=collect 1/5 done=0 progMoved=false"
+    },
+    "music_toggle": {
+      "pass": true,
+      "detail": "musicOff=true"
+    },
+    "switch_to_3d": {
+      "pass": true,
+      "detail": "mode=3d"
+    },
+    "shard_collect_3d": {
+      "pass": true,
+      "detail": "shards 1 → 15"
+    },
+    "race_checkpoints_e2e": {
+      "pass": true,
+      "detail": "checkpoints passed=3, questsDone=4, raceBest=4.2"
+    },
+    "race_best_recorded": {
+      "pass": true,
+      "detail": "raceBest=4.2s"
+    },
+    "quest_loop_continues": {
+      "pass": true,
+      "detail": "questsDone=4 achievements=6"
+    },
+    "touch_layout_no_overlap": {
+      "pass": true,
+      "detail": "q∩joy=false q∩btns=false sb∩btns=false sb∩joy=false"
+    },
+    "switch_back_2d": {
+      "pass": true,
+      "detail": "mode=2d"
+    },
+    "save_written": {
+      "pass": true,
+      "detail": "{\"v\":1,\"score\":530,\"shards\":15,\"questsDone\":4,\"raceBest\":4.2,\"districts\":{\"九龙寨城\":1,\"歌舞伎町\":1,\"义体市场\":1,\"霓虹港湾\":1,\"数据坟场\":1,\"天穹露台\":1},\"achievemen"
+    },
+    "persist_after_reload": {
+      "pass": true,
+      "detail": "score 530→530(+0), shards 15→15(+0), quests 4→4, raceBest 4.2→4.2, ach 6→6, districts 6→6; 存档刷新后: {\"v\":1,\"score\":530,\"shards\":15,\"questsDone\":4,\"raceBest\":4.2,\"districts\":{\"九龙寨城\":1,\"歌舞伎町\":1,\"义体市场\":1,\"霓虹港湾\":1,\"数据坟场\":1,\""
+    }
+  }
+}

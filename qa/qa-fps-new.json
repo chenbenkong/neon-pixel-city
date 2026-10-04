@@ -1,0 +1,39 @@
+{
+  "label": "QA-FPS-NEW",
+  "suite": "fps",
+  "url": "http://127.0.0.1:8131/",
+  "console": [],
+  "exceptions": [],
+  "samples": [],
+  "result": {
+    "fps2d": {
+      "phase": "2d",
+      "samples": 1959,
+      "avgMs": 11.2,
+      "avgFps": 89,
+      "p95Ms": 11.2
+    },
+    "fps3d": {
+      "phase": "3d",
+      "samples": 1437,
+      "avgMs": 11.5,
+      "avgFps": 87,
+      "p95Ms": 11.3
+    },
+    "fpsBack": {
+      "phase": "back-2d",
+      "samples": 698,
+      "avgMs": 11.3,
+      "avgFps": 88,
+      "p95Ms": 11.2
+    },
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "checks": {
+    "boot_100": {
+      "pass": true,
+      "detail": "pct=100% voxel=LOADING VOXEL SKYLINE ..................... OK"
+    }
+  }
+}

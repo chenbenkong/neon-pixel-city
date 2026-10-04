@@ -1,0 +1,74 @@
+{
+  "label": "ONLINE",
+  "suite": "boot",
+  "url": "https://chenbenkong.github.io/neon-pixel-city/",
+  "console": [],
+  "exceptions": [],
+  "samples": [],
+  "result": {
+    "snap": {
+      "pct": "100%",
+      "score": "0",
+      "shard": "0",
+      "best": "--",
+      "qTitle": "待派发…",
+      "qProg": "STANDBY",
+      "qBar": "0%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00172 PXSPD 062 PX/SFPS 60",
+      "save": null,
+      "dbg": {
+        "mode": "2d",
+        "entered": false,
+        "score": 0,
+        "shards": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 0,
+        "questType": null,
+        "questDone": 0,
+        "questN": 0,
+        "talks": 0,
+        "perf": {
+          "avg": 12.315833481152852,
+          "p95": 22.200000762939453,
+          "max": 88.80000305175781,
+          "frames": 120
+        },
+        "rawDt": 0.011199999999999818,
+        "lastSimDt": 0.011199999999999818,
+        "player": {
+          "x": 173.11003382854662,
+          "y": 220,
+          "vx": 61.99999999999986,
+          "vy": 0,
+          "face": 1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 0,
+          "apexHold": 0,
+          "sqx": 1,
+          "sqy": 1
+        },
+        "camX": -53.00565831303587
+      }
+    },
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "checks": {
+    "boot_100": {
+      "pass": true,
+      "detail": "pct=100% enterEnabled=true"
+    },
+    "boot_voxel_ok": {
+      "pass": true,
+      "detail": "LOADING VOXEL SKYLINE ..................... OK"
+    }
+  }
+}

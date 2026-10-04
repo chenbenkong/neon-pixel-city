@@ -1,0 +1,141 @@
+{
+  "label": "ONLINE-B3",
+  "suite": "boot",
+  "url": "https://chenbenkong.github.io/neon-pixel-city/",
+  "console": [],
+  "exceptions": [],
+  "samples": [],
+  "result": {
+    "snap": {
+      "pct": "100%",
+      "score": "0",
+      "shard": "0",
+      "best": "--",
+      "qTitle": "待派发…",
+      "qProg": "STANDBY",
+      "qBar": "0%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00179 PXSPD 062 PX/SFPS 60",
+      "save": null,
+      "dbg": {
+        "mode": "2d",
+        "state": "BOOT",
+        "entered": false,
+        "shifting": false,
+        "score": 0,
+        "shards": 0,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 0,
+        "questType": null,
+        "questDone": 0,
+        "questN": 0,
+        "talks": 0,
+        "perf": {
+          "avg": 11.389166879653931,
+          "p95": 11.199999809265137,
+          "max": 44.400001525878906,
+          "frames": 120
+        },
+        "rawDt": 0.011199999999999818,
+        "lastSimDt": 0.011199999999999818,
+        "player": {
+          "x": 183.07476825672242,
+          "y": 220,
+          "vx": 61.99999999999998,
+          "vy": 0,
+          "face": 1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 0,
+          "apexHold": 0,
+          "sqx": 1,
+          "sqy": 1
+        },
+        "camX": -43.04103313871121,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 0,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 2,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "patrol",
+            "patrol"
+          ],
+          "hps": [
+            2,
+            2
+          ],
+          "xs": [
+            470,
+            -139
+          ],
+          "flashT": [
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "spawning",
+          "spawned": 2,
+          "timer": 0.578,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      }
+    },
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "checks": {
+    "boot_100": {
+      "pass": true,
+      "detail": "pct=100% enterEnabled=true"
+    },
+    "boot_voxel_ok": {
+      "pass": true,
+      "detail": "LOADING VOXEL SKYLINE ..................... OK"
+    }
+  }
+}

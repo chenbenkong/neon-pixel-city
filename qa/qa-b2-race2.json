@@ -1,0 +1,2344 @@
+{
+  "label": "QA-B2-RACE2",
+  "suite": "full",
+  "url": "http://127.0.0.1:8180/",
+  "console": [],
+  "exceptions": [],
+  "samples": [
+    {
+      "pct": null,
+      "score": "20",
+      "shard": "2",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "2/5",
+      "qBar": "40%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00110 PXSPD 061 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":20,\"shards\":2,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 20,
+        "shards": 2,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 2,
+        "questN": 5,
+        "talks": 0,
+        "perf": {
+          "avg": 14.908333524068196,
+          "p95": 22.299999237060547,
+          "max": 33.400001525878906,
+          "frames": 120
+        },
+        "rawDt": 0.011199999999998909,
+        "lastSimDt": 0.011199999999998909,
+        "player": {
+          "x": 108.88159045306129,
+          "y": 220,
+          "vx": -61.50267830515529,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.035984284291857,
+          "apexHold": 0,
+          "sqx": 1.0452714262537468,
+          "sqy": 0.9647888906915302
+        },
+        "camX": -143.8926638313771,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 20,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "patrol",
+            "patrol",
+            "patrol"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            341,
+            -236,
+            472
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 12660,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "20",
+      "shard": "2",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "2/5",
+      "qBar": "40%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00179 PXSPD 061 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":20,\"shards\":2,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 20,
+        "shards": 2,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 2,
+        "questN": 5,
+        "talks": 1,
+        "perf": {
+          "avg": 16.020000195503236,
+          "p95": 33.400001525878906,
+          "max": 44.599998474121094,
+          "frames": 120
+        },
+        "rawDt": 0.011199999999998909,
+        "lastSimDt": 0.011199999999998909,
+        "player": {
+          "x": 175.47548964901608,
+          "y": 220,
+          "vx": -61.61130747999875,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.03570824650373,
+          "apexHold": 0,
+          "sqx": 1.0318414996113665,
+          "sqy": 0.9752343891911595
+        },
+        "camX": -77.71110426942715,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 20,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "patrol",
+            "patrol",
+            "patrol"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            341,
+            -236,
+            473
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 14673,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "20",
+      "shard": "2",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "2/5",
+      "qBar": "40%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00243 PXSPD 062 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":20,\"shards\":2,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 20,
+        "shards": 2,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 2,
+        "questN": 5,
+        "talks": 1,
+        "perf": {
+          "avg": 15.001666784286499,
+          "p95": 22.799999237060547,
+          "max": 33.400001525878906,
+          "frames": 120
+        },
+        "rawDt": 0.011200000000000727,
+        "lastSimDt": 0.011200000000000727,
+        "player": {
+          "x": 238.39358254956122,
+          "y": 220,
+          "vx": -43.691658787204794,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.03570824650373,
+          "apexHold": 0,
+          "sqx": 1.0000000000160705,
+          "sqy": 0.9999999999875008
+        },
+        "camX": -14.390679102601219,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 20,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "patrol"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            292,
+            -236,
+            468
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 16611,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "20",
+      "shard": "2",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "2/5",
+      "qBar": "40%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00302 PXSPD 062 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":20,\"shards\":2,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 20,
+        "shards": 2,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 2,
+        "questN": 5,
+        "talks": 1,
+        "perf": {
+          "avg": 14.629166785875956,
+          "p95": 33.29999923706055,
+          "max": 77.80000305175781,
+          "frames": 120
+        },
+        "rawDt": 0.011,
+        "lastSimDt": 0.011,
+        "player": {
+          "x": 301.0248986849792,
+          "y": 220,
+          "vx": -61.87564711752155,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.03570824650373,
+          "apexHold": 0,
+          "sqx": 1.0000000000000002,
+          "sqy": 0.9999999999999999
+        },
+        "camX": 48.58001350027227,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 20,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "patrol"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            343,
+            -236,
+            472
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 18518,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00366 PXSPD 062 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 1,
+        "perf": {
+          "avg": 14.259166916211447,
+          "p95": 11.300000190734863,
+          "max": 326.6000061035156,
+          "frames": 120
+        },
+        "rawDt": 0.32659999999999856,
+        "lastSimDt": 0.05,
+        "player": {
+          "x": 366.1811919164243,
+          "y": 220,
+          "vx": 0,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.03181733787622,
+          "apexHold": 0,
+          "sqx": 1.021032084626023,
+          "sqy": 0.9836417119575377
+        },
+        "camX": 120.28537471985047,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            406,
+            -236,
+            418
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 20860,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00435 PXSPD 062 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 2,
+        "perf": {
+          "avg": 15.541666889190674,
+          "p95": 22.299999237060547,
+          "max": 300.1000061035156,
+          "frames": 120
+        },
+        "rawDt": 0.011099999999998545,
+        "lastSimDt": 0.011099999999998545,
+        "player": {
+          "x": 432.53578505803387,
+          "y": 220,
+          "vx": -18.208574026296407,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.03181733787622,
+          "apexHold": 0,
+          "sqx": 1.0000000000170237,
+          "sqy": 0.9999999999867593
+        },
+        "camX": 182.0807838253444,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            472,
+            -236,
+            484
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 23022,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00494 PXSPD 031 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 2,
+        "perf": {
+          "avg": 12.685833509763082,
+          "p95": 22.200000762939453,
+          "max": 55.599998474121094,
+          "frames": 120
+        },
+        "rawDt": 0.011100000000002183,
+        "lastSimDt": 0.011100000000002183,
+        "player": {
+          "x": 494.0464203369719,
+          "y": 220,
+          "vx": -30.912577772126227,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.03181733787622,
+          "apexHold": 0,
+          "sqx": 1.0000000000000007,
+          "sqy": 0.9999999999999997
+        },
+        "camX": 242.68159856686626,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            537,
+            -236,
+            549
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 25028,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00562 PXSPD 061 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 2,
+        "perf": {
+          "avg": 13.795833524068197,
+          "p95": 22.299999237060547,
+          "max": 33.400001525878906,
+          "frames": 120
+        },
+        "rawDt": 0.011100000000002183,
+        "lastSimDt": 0.011100000000002183,
+        "player": {
+          "x": 559.2730316550164,
+          "y": 220,
+          "vx": -61.68329022358733,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.001033767686835,
+          "apexHold": 0,
+          "sqx": 1.0220241452959253,
+          "sqy": 0.9828701092142801
+        },
+        "camX": 306.61701767204954,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            600,
+            -236,
+            612
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 27273,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00619 PXSPD 062 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 3,
+        "perf": {
+          "avg": 14.16666689713796,
+          "p95": 33.400001525878906,
+          "max": 44.5,
+          "frames": 120
+        },
+        "rawDt": 0.022299999999999272,
+        "lastSimDt": 0.022299999999999272,
+        "player": {
+          "x": 617.6063396372331,
+          "y": 220,
+          "vx": -61.95552139703161,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.00744098697598,
+          "apexHold": 0,
+          "sqx": 1.0048477088598906,
+          "sqy": 0.9962295597756406
+        },
+        "camX": 363.7223078442391,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            663,
+            -236,
+            675
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 29595,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00806 PXSPD 044 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 3,
+        "perf": {
+          "avg": 13.518333562215169,
+          "p95": 22.299999237060547,
+          "max": 77.80000305175781,
+          "frames": 120
+        },
+        "rawDt": 0.011,
+        "lastSimDt": 0.011,
+        "player": {
+          "x": 804.831579528685,
+          "y": 220,
+          "vx": -1.6220748925661441,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.033910632263826,
+          "apexHold": 0,
+          "sqx": 1.011443548816966,
+          "sqy": 0.9910994620312485
+        },
+        "camX": 560.0858882188326,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            847,
+            -236,
+            859
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 31824,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 00952 PXSPD 061 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 3,
+        "perf": {
+          "avg": 16.390000184377033,
+          "p95": 33.29999923706055,
+          "max": 333.3999938964844,
+          "frames": 120
+        },
+        "rawDt": 0.02219999999999709,
+        "lastSimDt": 0.02219999999999709,
+        "player": {
+          "x": 948.8581277489883,
+          "y": 220,
+          "vx": -10.674213413629596,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.036972258630158,
+          "apexHold": 0,
+          "sqx": 1.0224576630472568,
+          "sqy": 0.9825329287410224
+        },
+        "camX": 700.0779515877251,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            990,
+            -236,
+            1002
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 33899,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 01141 PXSPD 000 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 3,
+        "perf": {
+          "avg": 15.555000185966492,
+          "p95": 33.400001525878906,
+          "max": 44.5,
+          "frames": 120
+        },
+        "rawDt": 0.03330000000000291,
+        "lastSimDt": 0.03330000000000291,
+        "player": {
+          "x": 1141.2230724939545,
+          "y": 220,
+          "vx": 0,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.036972258630158,
+          "apexHold": 0,
+          "sqx": 1.0000000000009672,
+          "sqy": 0.9999999999992477
+        },
+        "camX": 900.4842900950624,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            1179,
+            -236,
+            1191
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 36077,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 01321 PXSPD 011 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 4,
+        "perf": {
+          "avg": 15.000000150998433,
+          "p95": 33.29999923706055,
+          "max": 66.5999984741211,
+          "frames": 120
+        },
+        "rawDt": 0.02219999999999709,
+        "lastSimDt": 0.02219999999999709,
+        "player": {
+          "x": 1320.9359984501305,
+          "y": 220,
+          "vx": -1.5747369458650815,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.036972258630158,
+          "apexHold": 0,
+          "sqx": 1.0000000000000002,
+          "sqy": 0.9999999999999999
+        },
+        "camX": 1075.93484879072,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            1364,
+            -236,
+            1376
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 38140,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 01507 PXSPD 062 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 4,
+        "perf": {
+          "avg": 14.166666849454243,
+          "p95": 33.099998474121094,
+          "max": 44.5,
+          "frames": 120
+        },
+        "rawDt": 0.02219999999999709,
+        "lastSimDt": 0.02219999999999709,
+        "player": {
+          "x": 1505.7923063943515,
+          "y": 220,
+          "vx": -2.694716405583567,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.036972258630158,
+          "apexHold": 0,
+          "sqx": 1.0000000000000002,
+          "sqy": 0.9999999999999999
+        },
+        "camX": 1259.984239240056,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            1548,
+            -236,
+            1560
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 40273,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 01657 PXSPD 061 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 4,
+        "perf": {
+          "avg": 15.740833425521851,
+          "p95": 22.299999237060547,
+          "max": 333.29998779296875,
+          "frames": 120
+        },
+        "rawDt": 0.01110000000000582,
+        "lastSimDt": 0.01110000000000582,
+        "player": {
+          "x": 1653.4601069167088,
+          "y": 220,
+          "vx": -43.49233718908138,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.0337431887138,
+          "apexHold": 0,
+          "sqx": 1.0438130203214997,
+          "sqy": 0.9659232064166112
+        },
+        "camX": 1401.7856246238825,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            1694,
+            -236,
+            1706
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 42301,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 01847 PXSPD 000 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 4,
+        "perf": {
+          "avg": 15.001666800181072,
+          "p95": 33.29999923706055,
+          "max": 44.5,
+          "frames": 120
+        },
+        "rawDt": 0.011200000000004366,
+        "lastSimDt": 0.011200000000004366,
+        "player": {
+          "x": 1846.9069135318507,
+          "y": 220,
+          "vx": 0,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.0337431887138,
+          "apexHold": 0,
+          "sqx": 1.0000000000004603,
+          "sqy": 0.999999999999642
+        },
+        "camX": 1606.1557368068277,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            1887,
+            -236,
+            1899
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 44601,
+      "where": "2d"
+    },
+    {
+      "pct": null,
+      "score": "30",
+      "shard": "3",
+      "best": "--",
+      "qTitle": "碎片回收 I",
+      "qProg": "3/5",
+      "qBar": "60%",
+      "mode": "2d",
+      "musicOff": false,
+      "dname": "歌舞伎町",
+      "tele": "POS 02012 PXSPD 062 PX/SFPS 60",
+      "save": "{\"v\":1,\"score\":30,\"shards\":3,\"questsDone\":0,\"raceBest\":null,\"districts\":{},\"achievements\":{\"first_shard\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}",
+      "dbg": {
+        "mode": "2d",
+        "state": "PLAYING",
+        "entered": true,
+        "shifting": false,
+        "score": 30,
+        "shards": 3,
+        "bestScore": 0,
+        "runs": 0,
+        "wins": 0,
+        "bestWave": 0,
+        "questsDone": 0,
+        "raceBest": null,
+        "districts": 0,
+        "achievements": 1,
+        "questType": "collect",
+        "questDone": 3,
+        "questN": 5,
+        "talks": 4,
+        "perf": {
+          "avg": 16.019166914621987,
+          "p95": 44.400001525878906,
+          "max": 88.9000015258789,
+          "frames": 120
+        },
+        "rawDt": 0.011099999999998545,
+        "lastSimDt": 0.011099999999998545,
+        "player": {
+          "x": 2012.351978784934,
+          "y": 220,
+          "vx": -61.996159353051446,
+          "vy": 0,
+          "face": -1,
+          "ground": true,
+          "coyoteT": 0.1,
+          "bufferT": 0,
+          "jumpHeld": false,
+          "apex": 24.0337431887138,
+          "apexHold": 0,
+          "sqx": 1,
+          "sqy": 1
+        },
+        "camX": 1758.543141165473,
+        "combat": {
+          "hp": 3,
+          "maxHp": 3,
+          "iframes": 0,
+          "combo": 0,
+          "comboT": 0,
+          "phase": "idle",
+          "phaseT": 0,
+          "swingId": 0,
+          "hitCount": 0,
+          "swings": 0,
+          "hits": 0,
+          "kills": 0,
+          "runScore": 30,
+          "hitbox": null
+        },
+        "feedback": {
+          "lastHitstop": 0,
+          "shakeX": 0,
+          "shakeY": 0,
+          "shakeAmp": 0,
+          "timeScale": 1,
+          "hurtT": 0,
+          "sparks": 0,
+          "debris": 0,
+          "sparkCap": 96,
+          "debrisCap": 128,
+          "poolLenSparks": 96,
+          "poolLenDebris": 128
+        },
+        "enemies": {
+          "poolLen": 12,
+          "alive": 3,
+          "hitBufLen": 12,
+          "hitCount": 0,
+          "states": [
+            "chase",
+            "patrol",
+            "chase"
+          ],
+          "hps": [
+            2,
+            2,
+            2
+          ],
+          "xs": [
+            2061,
+            -236,
+            2073
+          ],
+          "flashT": [
+            0,
+            0,
+            0
+          ]
+        },
+        "waves": {
+          "wave": 1,
+          "phase": "clearing",
+          "spawned": 3,
+          "timer": 1.4,
+          "frozen": false,
+          "label": "WAVE 1/3",
+          "remaining": 3
+        }
+      },
+      "t": 46699,
+      "where": "2d"
+    },
+    {
+      "t": 86261,
+      "where": "3d-collect",
+      "shards": 4,
+      "score": 40,
+      "quest": "collect 4/5"
+    },
+    {
+      "t": 86389,
+      "where": "3d-collect",
+      "shards": 5,
+      "score": 100,
+      "quest": "null 0/0"
+    },
+    {
+      "t": 115366,
+      "where": "3d-collect",
+      "shards": 6,
+      "score": 190,
+      "quest": "collect 1/10"
+    },
+    {
+      "t": 115586,
+      "where": "3d-collect",
+      "shards": 7,
+      "score": 200,
+      "quest": "collect 2/10"
+    },
+    {
+      "t": 115806,
+      "where": "3d-collect",
+      "shards": 8,
+      "score": 210,
+      "quest": "collect 3/10"
+    },
+    {
+      "t": 116018,
+      "where": "3d-collect",
+      "shards": 9,
+      "score": 220,
+      "quest": "collect 4/10"
+    },
+    {
+      "t": 116229,
+      "where": "3d-collect",
+      "shards": 10,
+      "score": 230,
+      "quest": "collect 5/10"
+    },
+    {
+      "t": 116439,
+      "where": "3d-collect",
+      "shards": 11,
+      "score": 240,
+      "quest": "collect 6/10"
+    },
+    {
+      "t": 116654,
+      "where": "3d-collect",
+      "shards": 12,
+      "score": 250,
+      "quest": "collect 7/10"
+    },
+    {
+      "t": 116872,
+      "where": "3d-collect",
+      "shards": 13,
+      "score": 260,
+      "quest": "collect 8/10"
+    },
+    {
+      "t": 117084,
+      "where": "3d-collect",
+      "shards": 14,
+      "score": 270,
+      "quest": "collect 9/10"
+    },
+    {
+      "t": 117295,
+      "where": "3d-collect",
+      "shards": 15,
+      "score": 380,
+      "quest": "null 0/0"
+    },
+    {
+      "t": 120453,
+      "where": "race-checkpoint",
+      "idx": 1,
+      "total": 4,
+      "quest": "1/4",
+      "score": 380
+    },
+    {
+      "t": 120828,
+      "where": "race-checkpoint",
+      "idx": 2,
+      "total": 4,
+      "quest": "2/4",
+      "score": 380
+    },
+    {
+      "t": 121197,
+      "where": "race-checkpoint",
+      "idx": 3,
+      "total": 4,
+      "quest": "3/4",
+      "score": 380
+    }
+  ],
+  "result": {
+    "instrumentation": "{\"qaInst\":true,\"setterHit\":1,\"c3\":true,\"instErr\":null}",
+    "walkRunRounds": 8,
+    "touch": {
+      "questCard": {
+        "l": 10,
+        "t": 391,
+        "r": 215,
+        "b": 511
+      },
+      "joy": {
+        "l": 28,
+        "t": 547,
+        "r": 156,
+        "b": 675
+      },
+      "scoreBoard": {
+        "l": 623,
+        "t": 10,
+        "r": 801,
+        "b": 58
+      },
+      "tbtns": {
+        "l": 922,
+        "t": 603,
+        "r": 1222,
+        "b": 675
+      },
+      "qOverlapsJoy": false,
+      "qOverlapsBtns": false,
+      "sbOverlapsBtns": false,
+      "sbOverlapsJoy": false
+    },
+    "saveRaw": "{\"v\":1,\"score\":530,\"shards\":15,\"questsDone\":4,\"raceBest\":1.8,\"districts\":{\"歌舞伎町\":1,\"义体市场\":1,\"数据坟场\":1,\"九龙寨城\":1,\"天穹露台\":1,\"霓虹港湾\":1},\"achievements\":{\"first_shard\":1,\"first_flight\":1,\"first_quest\":1,\"shard_10\":1,\"all_districts\":1,\"race_record\":1},\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0}"
+  },
+  "checks": {
+    "boot_100": {
+      "pass": true,
+      "detail": "pct=100% enterEnabled=true"
+    },
+    "boot_voxel_ok": {
+      "pass": true,
+      "detail": "LOADING VOXEL SKYLINE ..................... OK"
+    },
+    "entered": {
+      "pass": true,
+      "detail": "{\"mode\":\"2d\",\"state\":\"PLAYING\",\"entered\":true,\"shifting\":false,\"score\":10,\"shards\":1,\"bestScore\":0,\"runs\":0,\"wins\":0,\"bestWave\":0,\"questsDone\":0,\"raceBest\":null,\"districts\":0,\"achievements\":1,\"questType\":\"collect\",\"questDone\":1,\"questN\":5,\"talks\":0,\"perf\":{\"avg\":14.166666809717814,\"p95\":22.299999237060547,\"max\":33.400001525878906,\"frames\":120},\"rawDt\":0.011100000000000363,\"lastSimDt\":0.011100000000000363,\"player\":{\"x\":40.759895382527986,\"y\":220,\"vx\":0,\"vy\":0,\"face\":1,\"ground\":true,\"coyoteT\":0.1,\"bufferT\":0,\"jumpHeld\":false,\"apex\":0,\"apexHold\":0,\"sqx\":1.0000000022360807,\"sqy\":0.9999999981585218},\"camX\":-198.74010461747196,\"combat\":{\"hp\":3,\"maxHp\":3,\"iframes\":0,\"combo\":0,\"comboT\":0,\"phase\":\"idle\",\"phaseT\":0,\"swingId\":0,\"hitCount\":0,\"swings\":0,\"hits\":0,\"kills\":0,\"runScore\":10,\"hitbox\":null},\"feedback\":{\"lastHitstop\":0,\"shakeX\":0,\"shakeY\":0,\"shakeAmp\":0,\"timeScale\":1,\"hurtT\":0,\"sparks\":0,\"debris\":0,\"sparkCap\":96,\"debrisCap\":128,\"poolLenSparks\":96,\"poolLenDebris\":128},\"enemies\":{\"poolLen\":12,\"alive\":3,\"hitBufLen\":12,\"hitCount\":0,\"states\":[\"patrol\",\"patrol\",\"patrol\"],\"hps\":[2,2,2],\"xs\":[340,-233,472],\"flashT\":[0,0,0]},\"waves\":{\"wave\":1,\"phase\":\"clearing\",\"spawned\":3,\"timer\":1.4,\"frozen\":false,\"label\":\"WAVE 1/3\",\"remaining\":3}}"
+    },
+    "walk_changes_district": {
+      "pass": true,
+      "detail": "districts seen: 歌舞伎町"
+    },
+    "shard_collect_2d": {
+      "pass": true,
+      "detail": "shards=3 score=30 (+10/枚)"
+    },
+    "npc_talk_2d": {
+      "pass": true,
+      "detail": "talks=4"
+    },
+    "quest_received_and_progress": {
+      "pass": true,
+      "detail": "quest=collect 3/5 done=0 progMoved=true"
+    },
+    "music_toggle": {
+      "pass": true,
+      "detail": "musicOff=true"
+    },
+    "switch_to_3d": {
+      "pass": true,
+      "detail": "mode=3d"
+    },
+    "shard_collect_3d": {
+      "pass": true,
+      "detail": "shards 3 → 15"
+    },
+    "race_checkpoints_e2e": {
+      "pass": true,
+      "detail": "checkpoints passed=3, questsDone=4, raceBest=1.8"
+    },
+    "race_best_recorded": {
+      "pass": true,
+      "detail": "raceBest=1.8s"
+    },
+    "quest_loop_continues": {
+      "pass": true,
+      "detail": "questsDone=4 achievements=6"
+    },
+    "touch_layout_no_overlap": {
+      "pass": true,
+      "detail": "q∩joy=false q∩btns=false sb∩btns=false sb∩joy=false"
+    },
+    "switch_back_2d": {
+      "pass": true,
+      "detail": "mode=2d"
+    },
+    "save_written": {
+      "pass": true,
+      "detail": "{\"v\":1,\"score\":530,\"shards\":15,\"questsDone\":4,\"raceBest\":1.8,\"districts\":{\"歌舞伎町\":1,\"义体市场\":1,\"数据坟场\":1,\"九龙寨城\":1,\"天穹露台\":1,\"霓虹港湾\":1},\"achievemen"
+    }
+  },
+  "fatal": "Error: CDP timeout Runtime.evaluate\n    at Timeout._onTimeout (file:///C:/Users/moli/WorkBuddy/2026-09-26-23-23-41/qa/qa-e2e.mjs:67:83)\n    at listOnTimeout (node:internal/timers:585:17)\n    at process.processTimers (node:internal/timers:521:7)"
+}
