@@ -133,14 +133,14 @@ function onShardCollect() {
     city2d.runShards += 1;
     city2d.addScore(SCORE.SHARD);
   }
-  quest.onShard();
+  // [探索模式] 不推进任务
   if (audio.sfxShard) audio.sfxShard();
   const sh = save.mem.shards;
-  quest.onAchievement('first_shard');
-  if (sh >= 10) quest.onAchievement('shard_10');
-  if (sh >= 50) quest.onAchievement('shard_50');
-  if (sh >= 100) quest.onAchievement('shard_100');
-  if (save.mem.score >= 1000) quest.onAchievement('rich');
+  save.achievement('first_shard');
+  if (sh >= 10) save.achievement('shard_10');
+  if (sh >= 50) save.achievement('shard_50');
+  if (sh >= 100) save.achievement('shard_100');
+  if (save.mem.score >= 1000) save.achievement('rich');
   refreshScore();
 }
 
@@ -353,8 +353,9 @@ async function boot() {
   city2d = new City2D($('#c2d'), audio);
   city2d.onShardCollect = onShardCollect;
   // 死亡序列结束 → 失败结算；第 3 波清空 → 胜利结算
-  city2d.onDeathEnd = () => endRun(false);
-  city2d.onWin = () => endRun(true);
+  // [探索模式] 不死亡、不结算：无人机不攻击，hp 恒满。
+  city2d.onDeathEnd = null;
+  city2d.onWin = null;
   city2d.talkKey = isTouch ? null : 'E'; // 触屏无 E 键，隐藏按键提示（点击对话）
   window.__rafId = requestAnimationFrame(frame);   // 登记 id，测试的 stopLoop() 要靠它
   progress(24);
@@ -365,7 +366,7 @@ async function boot() {
       city3d.render();
       // 玩法接线：碎片收集 / 竞速检查点（窄接口，three 对象不出 city3d）
       city3d.onShardCollect = onShardCollect;
-      city3d.onRaceCheckpoint = (idx, total) => quest.onCheckpoint(idx, total);
+      // [探索模式] 竞速检查点不再推进任务
       return city3d;
     })
     .catch((e) => { console.error(e); toast('3D 模块加载失败：你的设备可能不支持 WebGL2'); return null; });
@@ -393,7 +394,7 @@ function enter() {
   city2d.enter();
   updateControls();
   updateTrack(0);
-  if (quest.idx === 0) quest.next(); // 进入城市后派发第一个任务
+  // [探索模式] 不派发任务
   setTimeout(() => banner('PIXEL STREET', '2D · 像素街道'), 900);
   if (innerHeight > innerWidth) setTimeout(() => toast('横屏浏览体验更佳'), 4500);
 }
@@ -440,8 +441,7 @@ async function switchMode() {
       (to === '3d' ? city3d : city2d).enter();
       updateControls();
       lastDistrict = null;
-      quest.onModeChanged(to); // 竞速任务只在 3D 进行
-      if (to === '3d') quest.onAchievement('first_flight');
+      if (to === '3d') save.achievement('first_flight');
     },
     onDone: () => {
       gs.endShift();
@@ -484,7 +484,7 @@ addEventListener('keydown', (e) => {
     else if (gs.is('PAUSED')) gs.go('PLAYING');
   }
   if (e.code === 'KeyR') {
-    if (gs.is('PAUSED') || gs.is('RESULT')) retryRun();
+    // [探索模式] R 重试已移除
   }
 });
 addEventListener('pointerdown', () => audio.resume());
@@ -578,8 +578,8 @@ function hud(dt, scene) {
       // 玩法接线：区域打卡（任务 + 六区成就）
       if (!gs.is('BOOT')) {
         save.visitDistrict(info.zh);
-        quest.onDistrict(info.zh);
-        if (save.districtCount() >= 6) quest.onAchievement('all_districts');
+        // [探索模式] 区域打卡不再推进任务；六区成就保留
+        if (save.districtCount() >= 6) save.achievement('all_districts');
       }
     }
     tele.innerHTML = info.tele.map((t) => `<span>${t}</span>`).join('');
@@ -635,7 +635,7 @@ function frame(now) {
     scene.render();
   }
   fx.update(simDt);
-  if (gs.is('PLAYING')) quest.update(simDt); // 竞速计时等
+  // [探索模式] quest.update 不再调用
   hud(simDt, scene);
   hudUI.update(simDt, gs);
   // NPC 对话：桌面 E 键（复用 input 的统一按键状态，避免重复 keydown 监听）
@@ -683,24 +683,9 @@ function inputFor() {
 // 不会让玩家的操作权被无限期剥夺；同时保证「永远存在一个能切走的窗口」。
 gs._gateLockSince = 0;
 gs.gatePhase = function () {
-  if (!city2d) return null;
-  // 3D 里没有战斗，门控这个概念本就是为 2D 设计的。
-  // 不放行的话，玩家在 3D 按 TAB 会收到「战斗进行中 · 清完这一波才能切换维度」——
-  // 这句话在 3D 里是假的，玩家会以为自己漏掉了什么（drone 状态被冻结在 chase）。
-  if (gs.mode === '3d') { gs._gateLockSince = 0; return 'idle'; }
-  let chasing = false;
-  const ds = city2d.enemies.drones;
-  for (let i = 0; i < ds.length; i++) {
-    if (ds[i].active && ds[i].state === 'chase') { chasing = true; break; }
-  }
-  const ph = city2d.waves.phase;
-  const waveBusy = ph === 'spawning' || ph === 'clearing';
-  if (!chasing && !waveBusy) { gs._gateLockSince = 0; return ph; }   // 开窗
-  const now = performance.now();
-  if (!gs._gateLockSince) { gs._gateLockSince = now; return 'combat'; }
-  if (now - gs._gateLockSince < GATE_MAX_LOCK * 1000) return 'combat';
-  gs._gateLockSince = 0;              // 放行一次后重新计时
-  return 'intermission';              // 必须在放行名单里，'spawning' 仍会被判为 blocked
+  // [探索模式] 维度切换**完全放行**：不再有波次/战斗，也就没有任何理由限制玩家切维度。
+  // 探索模式没有生命值，切换不会带来操作权损失。
+  return 'idle';
 };
 
 /** 把 city2d 的战斗数据同步进 RunStats（结算面板的唯一数据源） */
@@ -788,8 +773,7 @@ gs.on('enter:PLAYING', function () {
   document.body.classList.add('entered');
   document.body.classList.remove('dying');
   showPanel('none');
-  if (city2d) { city2d.waves.thaw(); }
-  // 恢复累积分数（历史成绩，不清）
+  // [探索模式] 无波次（历史成绩，不清）
   if (audio.setMusicDuck) audio.setMusicDuck(AUDIO_BASE, 0.1);
   // 环境层跟着状态走：战斗中的城市低鸣更响，菜单/暂停更轻（P0-11 判据 6）
   audio.setAmbienceFor(gs.mode === '3d' ? 'menu' : 'playing', 1);
@@ -797,7 +781,6 @@ gs.on('enter:PLAYING', function () {
 });
 gs.on('enter:PAUSED', function () {
   showPanel('pausePanel');
-  if (city2d) city2d.waves.freeze();
   if (audio.setMusicDuck) audio.setMusicDuck(DUCK_MENU, 0.1);
   audio.setAmbienceFor('paused', 1);
   audio.setRain(0.02);
@@ -805,13 +788,13 @@ gs.on('enter:PAUSED', function () {
 });
 gs.on('exit:PAUSED', function () {
   showPanel('none');
-  if (city2d) city2d.waves.thaw();
   if (audio.setMusicDuck) audio.setMusicDuck(AUDIO_BASE, 0.1);
   audio.setAmbienceFor('playing', 1);
   audio.setRain(0.06);
 });
 gs.on('enter:RESULT', function (payload) {
-  showPanel('resultPanel');
+  // [探索模式] 结算面板已从 DOM 移除；保留分支以防状态机被外部触发
+  showPanel('none');
   if (city2d) { city2d.waves.freeze(); city2d.enemies.reset(); }
   if (audio.setMusicDuck) audio.setMusicDuck(DUCK_MENU, 0.13);
   audio.setAmbienceFor('result', 1);
@@ -824,8 +807,7 @@ gs.on('enter:MENU', function () {
   if (audio.setRain) audio.setRain(0.07);
 });
 // 2D/3D 转场期间冻结波次计时（不惩罚玩家）
-gs.on('shift:start', function () { if (city2d) city2d.waves.freeze(); });
-gs.on('shift:end', function () { if (city2d && gs.is('PLAYING')) city2d.waves.thaw(); });
+// [探索模式] 波次系统已停用，转场不再冻结它
 
 /** 暂停面板的进度摘要 */
 function fillPauseSummary() {
@@ -841,13 +823,13 @@ function fillPauseSummary() {
 // 面板按钮
 function on(id, fn) { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); }
 on('pauseResume', function () { gs.go('PLAYING'); });
-on('pauseRetry', function () { retryRun(); });
+// [探索模式] 暂停面板不再有「重试」
 on('pauseMenu', function () { gs.go('MENU'); });
-on('resRetry', function () { retryRun(); });
+// [探索模式] 结算面板已移除
 on('resMenu', function () { gs.go('MENU'); });
 on('btnHelp', function () { showPanel('helpPanel'); });
 on('btnHelpBack', function () { showPanel('menuPanel'); });
-on('btnStart', function () { if (gs.is('MENU')) retryRun(); });
+on('btnStart', function () { if (gs.is('MENU')) { city2d.resetRun(); gs.go('PLAYING'); showPanel('none'); } });
 
 // 战斗 HUD 已抽到 js/hud.js（Hud 类，12 字段脏检查）。这里是实例化。
 const hudUI = new Hud(city2d, audio).bind();
@@ -860,14 +842,14 @@ addEventListener('resize', () => {
 });
 
 // 任务卡 DOM 注入 + 初始渲染
-quest.init({
+if (0) quest.init({
   card: $('#questCard'),
   title: $('#qTitle'),
   desc: $('#qDesc'),
   bar: $('#qBar'),
   prog: $('#qProg'),
 });
-quest.renderCard();
+// [探索模式] 任务卡不再渲染
 refreshScore();
 
 updateControls();

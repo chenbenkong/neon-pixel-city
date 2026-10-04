@@ -56,13 +56,6 @@
       <div class="np-title" id="track">霓虹夜雨 · Neon Rain</div>
     </div>
 
-    <div id="questCard" class="panel">
-      <div class="ttl">QUEST // 任务</div>
-      <div id="qTitle">待派发…</div>
-      <div id="qDesc">正在接入中间人终端</div>
-      <div class="q-bar"><i id="qBar"></i></div>
-      <div id="qProg">STANDBY</div>
-      <button id="questSkip" class="q-skip" style="display:none">放弃任务</button>
     </div>
 
     <div id="scoreBoard" class="panel">
@@ -86,10 +79,9 @@
   </div>
 
   <!-- 战斗 HUD：视口上/中带，4 项常驻生存信息（PRD 4.3 L1/L2） -->
+  <!-- [探索模式] 战斗 HUD 只保留「碎片 / 得分」两个总数：没有血格、没有波次、没有连击 -->
   <div id="combatHud">
-    <div class="hp" id="hpIcons"><i class="on"></i><i class="on"></i><i class="on"></i></div>
-    <div class="wv"><span id="wvLabel">WAVE 1/3</span><em id="wvRemain">剩余 0</em></div>
-    <div class="cb" id="comboBox">★ COMBO ×<span id="cbNum">2</span></div>
+    <div class="st"><b id="hudShards">0</b><i>碎片</i><b id="hudScore">0</b><i>积分</i></div>
   </div>
   <div id="hurtVignette"></div>
 
@@ -149,22 +141,6 @@
   </div>
 
   <!-- 结算面板 -->
-  <div id="resultPanel" class="panel-modal result">
-    <div class="mm-box wide">
-      <div class="res-title" id="resTitle">MISSION CLEAR</div>
-      <div class="res-sub" id="resSub">回合结束</div>
-      <div class="res-stats">
-        <div class="rs" style="--i:0"><em>存活时长</em><b id="resTime">00:00</b></div>
-        <div class="rs" style="--i:1"><em>击 杀</em><b id="resKills">0</b></div>
-        <div class="rs" style="--i:2"><em>碎 片</em><b id="resShards">0</b></div>
-        <div class="rs" style="--i:3"><em>命中率</em><b id="resRate">0%</b></div>
-        <div class="rs" style="--i:4"><em>最终得分</em><b id="resScore">0</b></div>
-      </div>
-      <div class="grade" id="resGrade">C</div>
-      <div class="res-record" id="resRecord">★ 新纪录！</div>
-      <div class="res-btns">
-        <button id="resRetry" class="mm-btn primary">再来一次 <em>(R)</em></button>
-        <button id="resMenu" class="mm-btn">返回菜单</button>
       </div>
     </div>
   </div>

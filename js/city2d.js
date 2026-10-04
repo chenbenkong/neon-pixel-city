@@ -630,6 +630,8 @@ export class City2D {
    */
   hurtPlayer(dir) {
     const p = this.player;
+    // [探索模式] 无生命值：保留方法签名（combat/feedback 仍会调用），但直接返回，永不扣血
+    if (true) return false;
     if (this.iframes > 0 || this.hp <= 0) return false;
     this.hp -= 1;
     this.iframes = FEEL.IFRAMES;
@@ -649,7 +651,8 @@ export class City2D {
   }
 
   breakCombo() {
-    if (this.combo > 0 && this.audio && this.audio.sfxComboBreak) this.audio.sfxComboBreak();
+    // [探索模式] 连击不再有惩罚音效（没有目标可完成，断了无所谓）
+    if (false && this.combo > 0 && this.audio && this.audio.sfxComboBreak) this.audio.sfxComboBreak();
     this.combo = 0;
     this.comboT = 0;
   }
@@ -791,22 +794,13 @@ export class City2D {
     ctx.player = p; ctx.camX = this.cam.x; ctx.W = this.W; ctx.FEET = this.FEET;
     this.enemies.update(dt, ctx);
 
-    // 接触伤害：敌人与玩家重叠时造成 1 点伤害（无敌帧期间免疫）
-    if (this.hurtCd > 0) this.hurtCd = Math.max(0, this.hurtCd - dt);
-    if (this.hp > 0 && this.iframes <= 0 && this.hurtCd <= 0) {
-      for (let i = 0; i < this.enemies.drones.length; i++) {
-        const d = this.enemies.drones[i];
-        if (!d.active || d.state === 'dying' || d.state === 'recover') continue;
-        if (Math.abs(d.x - p.x) < DRONE.PLAYER_SEPARATION && Math.abs(d.y - p.y) < 30) {
-          this.hurtCd = 0.6;
-          this.hurtPlayer(d.x > p.x ? -1 : 1);
-          break;
-        }
-      }
-    }
+    // [探索模式] **无人机不攻击**：这一整段接触伤害判定已停用。
+    // 用户原话「无人机留着但不攻击」——它们仍会被挥击打飞、震屏、闪白、手感完整，
+    // 但不会造成任何伤害，所以探索模式没有生命值、不会死、没有结算。
+    // 保留 hurtPlayer() 方法签名（feedback / combat 仍会调用它），它直接返回 false。
 
-    // 波次推进（可能在 enemy.update 之后产生新敌人）
-    this.waves.update(dt, ctx);
+    // [探索模式] 波次系统停用：不再推进、不再刷怪。
+    // 城市靠程序化街区本身成立，不需要波次来"填充"内容。
 
     // 存活计时与波次奖励（结算时一次性兑现）
     if (this.hp > 0 && !this.dying) this.runTime += dt;
@@ -1036,8 +1030,28 @@ export class City2D {
     const want = 12; // 碎片同时激活上限。零降级：无性能档位缩放
     let active = 0;
     for (const s of this.shards) if (s.active) active += 1;
+    // 回收落在相机身后的碎片。
+    //
+    // 之前只有「被捡到」才会把碎片置为 inactive 并安排重生，于是没被捡的碎片
+    // 永远 active。池上限 12，而 12 枚全都在玩家出发那一区落地 ——
+    // 于是 active 恒为 12，下面的 `active < want` 永远不成立，**再也不会有新碎片生成**。
+    //
+    // 实测（tools/shard-walk.mjs，按住 D 连续走）：
+    //   第 5 秒  玩家 x=351，最近碎片 34px（差 6px 就进 28px 拾取半径）
+    //   第 10 秒 起，视口内碎片数 = 0，玩家一路走到 x=1171，**1100px 内一枚都没有**
+    // 这就是用户说的「碎片一个都没有遇到」——不是碎片捡不到，是往前走根本没有碎片。
+    //
+    // 只回收身后的：身前很远的碎片不回收，否则玩家全速冲刺时
+    // 会在眼前看到碎片凭空消失。
+    const BEHIND = this.cam.x - 160;
     for (const s of this.shards) {
       if (s.active) {
+        if (s.x < BEHIND) {
+          s.active = false;
+          s.respawn = 0;      // 下一帧立刻在玩家附近重新落地
+          active -= 1;
+          continue;
+        }
         const sy = s.y0 + Math.sin(this.time * 2.2 + s.seed) * 3;
         const dx = s.x - p.x, dy = sy - p.y;
         // 距离平方比较，不开方。半径 28：站立时玩家中心在 FEET，
