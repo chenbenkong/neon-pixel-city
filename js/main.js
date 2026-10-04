@@ -4,7 +4,6 @@ import { City2D } from './city2d.js';
 import { Transition } from './transition.js';
 import { TRACKS, DISTRICTS } from './data.js';
 import { Progress } from './progress.js';
-import { QuestSystem } from './quest.js';
 import { GameState, RunStats } from './state.js';
 import { Hud } from './hud.js';
 import { SCORE, HUD, AUDIO } from './config.js';
@@ -26,16 +25,10 @@ const fx = new Transition($('#fx'));
  */
 const gs = new GameState();
 
-// ---------- 玩法扩展：存档 / 任务 ----------
+// ---------- 玩法扩展：存档 ----------
+// [探索模式] 任务系统已整体停用：QuestSystem 不再 import、不再实例化、不再 init/update/next。
+// 6 个成就改为直接接 save.achievement()，记录「你做过什么」，不施加任何任务压力。
 const save = new Progress();
-const quest = new QuestSystem(save, {
-  banner, toast, audio, refreshScore,
-  getCity3d: () => city3d,
-  randomDistrict: () => DISTRICTS[Math.floor(Math.random() * DISTRICTS.length)],
-  isGameState: function () { return gs.is.apply(gs, arguments); },
-  // quest 需要知道当前维度：竞速任务在 3D 里派发时要能立刻开跑
-  isMode3D: function () { return gs.mode === '3d'; },
-});
 
 /**
  * PerfWatch —— 只观测，不干预。
@@ -183,13 +176,10 @@ window.__neonDebug = {
   },
   /** 解除冻结，恢复正常循环 */
   thaw() { window.__frozen = false; last = performance.now(); window.__rafId = requestAnimationFrame(frame); },
-  get quest() { return quest; },
   get audio() { return audio; },
   get hud() { return hudUI; },
-  get quest() { return quest; },
   get gs() { return gs; },
   get stats() {
-    var q = quest.current;
     var p = city2d ? city2d.player : null;
     var fb = city2d ? city2d.feedback : null;
     var cm = city2d ? city2d.combat : null;
@@ -201,7 +191,6 @@ window.__neonDebug = {
       questsDone: save.mem.questsDone, raceBest: save.mem.raceBest,
       districts: Object.keys(save.mem.districts || {}).length,
       achievements: Object.keys(save.mem.achievements || {}).length,
-      questType: q ? q.type : null, questDone: q ? q.done : 0, questN: q ? q.n : 0,
       talks: window.__neonDebug.talks,
       // 性能观测（只读，不参与任何降级决策）
       perf: {
@@ -635,7 +624,6 @@ function frame(now) {
     scene.render();
   }
   fx.update(simDt);
-  // [探索模式] quest.update 不再调用
   hud(simDt, scene);
   hudUI.update(simDt, gs);
   // NPC 对话：桌面 E 键（复用 input 的统一按键状态，避免重复 keydown 监听）
@@ -666,7 +654,6 @@ function inputFor() {
 // 战斗模块之间一律用方法调用不用事件；事件只用于这一层。
 // ================================================================
 
-// 波次门控注入：state.js 不依赖 waves.js，由这里把判定送进去。
 //
 // Q4 要求「只在波次间歇允许切换」。按字面实现（只看 wave.phase）有个死锁：
 // 玩家只要一直跑、不清场，波次永远停在 clearing/spawning，**TAB 就永久锁死**
@@ -743,7 +730,6 @@ function fillResult(win) {
     el.record.style.display = isRecord ? '' : 'none';
     if (isRecord) el.record.textContent = '★ 新纪录！最高分 ' + String(st.score);
   }
-  save.addRun(!!win, city2d.waves.wave);
   refreshScore();
   return st;
 }
@@ -795,7 +781,6 @@ gs.on('exit:PAUSED', function () {
 gs.on('enter:RESULT', function (payload) {
   // [探索模式] 结算面板已从 DOM 移除；保留分支以防状态机被外部触发
   showPanel('none');
-  if (city2d) { city2d.waves.freeze(); city2d.enemies.reset(); }
   if (audio.setMusicDuck) audio.setMusicDuck(DUCK_MENU, 0.13);
   audio.setAmbienceFor('result', 1);
   audio.setRain(0.015);
@@ -806,15 +791,12 @@ gs.on('enter:MENU', function () {
   audio.setAmbienceFor('menu', 1);
   if (audio.setRain) audio.setRain(0.07);
 });
-// 2D/3D 转场期间冻结波次计时（不惩罚玩家）
-// [探索模式] 波次系统已停用，转场不再冻结它
 
 /** 暂停面板的进度摘要 */
 function fillPauseSummary() {
   if (!city2d) return;
   const c = city2d;
   const w = $('#pauseWave'), k = $('#pauseKills'), s = $('#pauseShards'), cm = $('#pauseCombo');
-  if (w) w.textContent = 'WAVE ' + c.waves.wave + '/3';
   if (k) k.textContent = '击杀 ' + c.runKills;
   if (s) s.textContent = '碎片 ' + c.runShards;
   if (cm) cm.textContent = '连击 ×' + c.combo;
@@ -828,7 +810,9 @@ on('pauseMenu', function () { gs.go('MENU'); });
 // [探索模式] 结算面板已移除
 on('resMenu', function () { gs.go('MENU'); });
 on('btnHelp', function () { showPanel('helpPanel'); });
-on('btnHelpBack', function () { showPanel('menuPanel'); });
+// [探索模式] 帮助面板的返回目标：开始菜单已移除，返回即关闭面板回到游戏。
+// 原实现是 showPanel('menuPanel')，那个面板已经不存在了，点了会毫无反应。
+on('btnHelpBack', function () { showPanel('none'); });
 on('btnStart', function () { if (gs.is('MENU')) { city2d.resetRun(); gs.go('PLAYING'); showPanel('none'); } });
 
 // 战斗 HUD 已抽到 js/hud.js（Hud 类，12 字段脏检查）。这里是实例化。
@@ -841,15 +825,6 @@ addEventListener('resize', () => {
   rsz = setTimeout(function () { if (city2d) city2d.resize(); if (city3d) city3d.resize(); fx.resize(); }, 120);
 });
 
-// 任务卡 DOM 注入 + 初始渲染
-if (0) quest.init({
-  card: $('#questCard'),
-  title: $('#qTitle'),
-  desc: $('#qDesc'),
-  bar: $('#qBar'),
-  prog: $('#qProg'),
-});
-// [探索模式] 任务卡不再渲染
 refreshScore();
 
 updateControls();

@@ -6,3 +6,5 @@ qa/.edge-*/
 qa/*.log
 shots/*.png
 shots/*.webp
+.edge-*
+.probe-profile/

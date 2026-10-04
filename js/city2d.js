@@ -625,24 +625,16 @@ export class City2D {
   }
 
   /**
-   * 玩家受伤。返回 true 表示本次真的造成了伤害。
-   * 无敌帧期间完全免疫（PRD P0-4 验收 2）。
+   * 玩家受伤。探索模式下**永远返回 false**。
+   *
+   * 保留方法签名是因为 combat/feedback 仍会调用它（无人机挥击、接触判定），
+   * 但探索模式没有生命值：无人机不攻击、玩家不会死、没有失败重试。
+   * 探索模式里「挥两下」是纯手感反馈，不该有任何惩罚后果。
    */
-  hurtPlayer(dir) {
-    const p = this.player;
-    // [探索模式] 无生命值：保留方法签名（combat/feedback 仍会调用），但直接返回，永不扣血
-    if (true) return false;
-    if (this.iframes > 0 || this.hp <= 0) return false;
-    this.hp -= 1;
-    this.iframes = FEEL.IFRAMES;
-    // 击退：被推离攻击源 ≥8px（190 × 0.09 = 17.1px）
-    p.vx = dir * FEEL.HURT_KNOCK_V;
-    this.feedback.playerHurt();
-    // 断连
-    this.breakCombo();
-    this.audio.sfxHurt();
-    if (this.hp <= 0) this.onDeath();
-    return true;  }
+  hurtPlayer() {
+    return false;
+  }
+
   /** 连击累加（2 秒窗口） */
   addCombo() {
     this.combo += 1;

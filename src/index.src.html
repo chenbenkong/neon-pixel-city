@@ -86,17 +86,9 @@
   <div id="hurtVignette"></div>
 
   <!-- 主菜单 -->
-  <div id="menuPanel" class="panel-modal">
-    <div class="mm-box">
-      <div class="mm-title">霓虹之城</div>
-      <div class="mm-sub">NEON//CITY</div>
-      <button id="btnStart" class="mm-btn primary">▶ 开 始 游 戏</button>
-      <button id="btnHelp" class="mm-btn">玩法说明</button>
-      <div class="mm-clock" id="menuClock">2077.09.24 · 00:00</div>
-      <div class="mm-keys" id="controls"></div>
-      <div class="mm-best">最高分 <b id="menuBest">0</b> <span id="menuGrade">C</span></div>
-    </div>
-  </div>
+  <!-- [探索模式] 开始菜单已移除：打开即进入城市，不再有「开始游戏」这道门。
+       原 menuPanel 内的 DOM 引用（btnStart/btnHelp/controls/menuClock/menuBest）
+       在 main.js 中全部走 $() 空值守卫，删除后不会抛错。 -->
 
   <!-- 玩法说明 -->
   <div id="helpPanel" class="panel-modal">
