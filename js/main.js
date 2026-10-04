@@ -159,8 +159,30 @@ window.__neonDebug = {
    * 这个钩子让脚本能真正停住渲染，只在改完 CSS 后手动放一帧。
    */
   stopLoop() { if (window.__rafId) { cancelAnimationFrame(window.__rafId); window.__rafId = 0; } },
-  startLoop() { if (!window.__rafId) { last = performance.now(); window.__rafId = requestAnimationFrame(frame); } },
-  renderOnce() { frame(performance.now()); window.__rafId = 0; },
+  startLoop() { window.__frozen = false; last = performance.now(); window.__rafId = requestAnimationFrame(frame); },
+  /**
+   * 冻结循环并渲染**确定的一帧**（截图/对比工具用）。
+   *
+   * 为什么要专门做这个：直接 stopLoop() 只能停住循环，已经画上去的东西还在；
+   * 而 renderOnce() 会让 frame() 内部再续一期 rAF，然后把 __rafId 清零 ——
+   * 句柄丢了，真正的那个 rAF 还在跑，time 继续推进，截图对不上。
+   * 所以这里：先取消句柄，再置 __frozen 让 frame() 不续期，
+   * 并把 last 对齐到传入时刻（rawDt=0 → simDt=0 → 物理与 city2d.time 都不推进）。
+   */
+  freezeAt(t, warmup) {
+    if (window.__rafId) { cancelAnimationFrame(window.__rafId); window.__rafId = 0; }
+    window.__frozen = true;
+    last = performance.now();
+    if (city2d && t != null) city2d.time = t;
+    // 预热：drawProp() 会在**绘制过程中**往 this.steam 里 push 新粒子（用 Math.random），
+    // 且发射量由 draw 里累加的 p.acc 决定。冻结前 p.acc 留着实时阶段的余数，
+    // 于是第一次 freezeAt 会把余数一次性排空（发出随机蒸汽），第二次就不会 ——
+    // 两次渲染因此不同。预热一帧把余数排干净，之后才可复现。
+    if (warmup !== false) frame(last);
+    frame(last);
+  },
+  /** 解除冻结，恢复正常循环 */
+  thaw() { window.__frozen = false; last = performance.now(); window.__rafId = requestAnimationFrame(frame); },
   get quest() { return quest; },
   get audio() { return audio; },
   get hud() { return hudUI; },
@@ -624,7 +646,9 @@ function frame(now) {
   // 冻结期不清 pressed：玩家在 60ms 顿帧内按下的 J 会被下一个非冻结帧消费到
   input.endFrame(frozen);
   perf.work(performance.now() - workT0);
-  window.__rafId = requestAnimationFrame(frame);
+  // 冻结模式不自我续期：截图工具需要一段完全静止的画面，
+  // 只要 rAF 还在跑，rain/steam/time 就会推进，两次截图必然不同。
+  if (!window.__frozen) window.__rafId = requestAnimationFrame(frame);
 }
 
 /** 输入闸门：按状态决定这一帧给不给游戏逻辑喂真实输入 */
