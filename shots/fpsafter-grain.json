@@ -1,0 +1,24 @@
+{
+  "tag": "after-grain",
+  "phases": {
+    "fps2d": {
+      "perfAvgMs": 11.11,
+      "perfP95Ms": 11.4,
+      "perfMaxMs": 11.5,
+      "rafSamples": 780,
+      "rafAvgMs": 11.11,
+      "rafFps": 90,
+      "canvasW": 1920,
+      "canvasH": 1080,
+      "dpr": 2
+    },
+    "fps3d": {
+      "perfAvgMs": 11.11,
+      "perfP95Ms": 11.5,
+      "rafSamples": 691,
+      "rafAvgMs": 11.11,
+      "rafFps": 90
+    }
+  },
+  "exceptions": 0
+}

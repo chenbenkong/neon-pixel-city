@@ -1,0 +1,133 @@
+{
+  "tiers": [
+    {
+      "tier": {
+        "w": 1280,
+        "h": 720,
+        "dpr": 2
+      },
+      "innerW": 0,
+      "innerH": 0,
+      "devicePixelRatio": 0,
+      "canvasW": 0,
+      "canvasH": 0,
+      "canvasPixels": 0,
+      "nominalPixels": 3686400,
+      "canvasMP": 0,
+      "workAvgMs": 0,
+      "workP95Ms": 0,
+      "workMaxMs": 0,
+      "perfAvgMs": 0,
+      "perfP95Ms": 0,
+      "perfMaxMs": 0,
+      "rafAvgMs": 0,
+      "rafP95Ms": 0,
+      "rafFps": 0,
+      "samples": 0
+    },
+    {
+      "tier": {
+        "w": 1920,
+        "h": 1080,
+        "dpr": 1
+      },
+      "innerW": 0,
+      "innerH": 0,
+      "devicePixelRatio": 0,
+      "canvasW": 0,
+      "canvasH": 0,
+      "canvasPixels": 0,
+      "nominalPixels": 2073600,
+      "canvasMP": 0,
+      "workAvgMs": 0,
+      "workP95Ms": 0,
+      "workMaxMs": 0,
+      "perfAvgMs": 0,
+      "perfP95Ms": 0,
+      "perfMaxMs": 0,
+      "rafAvgMs": 0,
+      "rafP95Ms": 0,
+      "rafFps": 0,
+      "samples": 0
+    },
+    {
+      "tier": {
+        "w": 1920,
+        "h": 1080,
+        "dpr": 1.5
+      },
+      "innerW": 0,
+      "innerH": 0,
+      "devicePixelRatio": 0,
+      "canvasW": 0,
+      "canvasH": 0,
+      "canvasPixels": 0,
+      "nominalPixels": 4665600,
+      "canvasMP": 0,
+      "workAvgMs": 0,
+      "workP95Ms": 0,
+      "workMaxMs": 0,
+      "perfAvgMs": 0,
+      "perfP95Ms": 0,
+      "perfMaxMs": 0,
+      "rafAvgMs": 0,
+      "rafP95Ms": 0,
+      "rafFps": 0,
+      "samples": 0
+    },
+    {
+      "tier": {
+        "w": 1920,
+        "h": 1080,
+        "dpr": 2
+      },
+      "innerW": 0,
+      "innerH": 0,
+      "devicePixelRatio": 0,
+      "canvasW": 0,
+      "canvasH": 0,
+      "canvasPixels": 0,
+      "nominalPixels": 8294400,
+      "canvasMP": 0,
+      "workAvgMs": 0,
+      "workP95Ms": 0,
+      "workMaxMs": 0,
+      "perfAvgMs": 0,
+      "perfP95Ms": 0,
+      "perfMaxMs": 0,
+      "rafAvgMs": 0,
+      "rafP95Ms": 0,
+      "rafFps": 0,
+      "samples": 0
+    },
+    {
+      "tier": {
+        "w": 2560,
+        "h": 1440,
+        "dpr": 2
+      },
+      "innerW": 0,
+      "innerH": 0,
+      "devicePixelRatio": 0,
+      "canvasW": 0,
+      "canvasH": 0,
+      "canvasPixels": 0,
+      "nominalPixels": 14745600,
+      "canvasMP": 0,
+      "workAvgMs": 0,
+      "workP95Ms": 0,
+      "workMaxMs": 0,
+      "perfAvgMs": 0,
+      "perfP95Ms": 0,
+      "perfMaxMs": 0,
+      "rafAvgMs": 0,
+      "rafP95Ms": 0,
+      "rafFps": 0,
+      "samples": 0
+    }
+  ],
+  "base": {
+    "canvasPixels": 0,
+    "perfAvgMs": 0
+  }
+}
