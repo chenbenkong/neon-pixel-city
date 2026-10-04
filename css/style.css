@@ -66,9 +66,21 @@ body.shifting #stage { animation: shake 1s steps(12) both; }
  * 重复的图案起点随之移动，每个像素拿到的噪点值全变（最大像素差 241、
  * 纯色区 RMS 20.8、锐度 -5.6%），同样不通过。
  */
-#crt::after { content: ''; position: absolute; inset: -50%; background-image: var(--grain); opacity: 0.07; mix-blend-mode: screen; animation: grain 0.6s steps(6) infinite; }
+/* grain 层：inset 从 -50% 收到 -20%，把混合面积从 4.00× 视口降到 1.96×（-51%）。
+ *
+ * 为什么不是 -10%：keyframes 用的 translate(%) 相对**元素自身宽度**，元素越窄，
+ * 同样的百分比产生的屏幕位移越小，所以收窄必须按 200/新宽 补偿位移。
+ * 但补偿后正向位移会把元素左边缘推进视口内：
+ *   inset:-10% + ×1.667 → 元素宽 120%，最大位移 16% 视口，左边缘落到 +6%
+ *   → 屏幕左侧 6% 在动画某些帧**没有 grain**，是可见的画质劣化。
+ *   inset:-20% + ×1.4286 → 元素宽 140%，最大位移同样 16% 视口，左边缘 -4% 全程覆盖。
+ * 原值取 -50% 正是因为要留出余量：位移 16% 而 inset 有 50%，非常安全。
+ * 校验见 qa/grain-coverage.mjs（解析式，列出各方案的边缘位置）。
+ */
+#crt::after { content: ''; position: absolute; inset: -20%; background-image: var(--grain); opacity: 0.07; mix-blend-mode: screen; animation: grain 0.6s steps(6) infinite; }
 @keyframes crt { 0%, 100% { opacity: 1; } 48% { opacity: 0.92; } 50% { opacity: 1; } }
-@keyframes grain { 0% { transform: translate(0, 0); } 20% { transform: translate(-7%, 4%); } 40% { transform: translate(5%, -6%); } 60% { transform: translate(-3%, 8%); } 80% { transform: translate(8%, -2%); } 100% { transform: translate(0, 0); } }
+/* 百分比 ×1.4286 = 200/140：元素从 200% 宽缩到 140% 宽，用同样的屏幕空间位移补偿 */
+@keyframes grain { 0% { transform: translate(0, 0); } 20% { transform: translate(-10%, 5.714%); } 40% { transform: translate(7.143%, -8.571%); } 60% { transform: translate(-4.286%, 11.429%); } 80% { transform: translate(11.429%, -2.857%); } 100% { transform: translate(0, 0); } }
 
 /* ---------- HUD ---------- */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 25; opacity: 0; transition: opacity 0.8s; }
